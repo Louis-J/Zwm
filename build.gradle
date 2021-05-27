@@ -7,8 +7,8 @@
  */
 
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
-    id 'application'
+    // Apply the java-library plugin for API and implementation separation.
+    id 'java-library'
 }
 
 group 'org.louisj'
@@ -27,26 +27,30 @@ dependencies {
     testImplementation 'junit:junit:4.13.1'
 
     // This dependency is used by the application.
-    implementation 'com.google.guava:guava:30.0-jre'
+    // implementation 'com.google.guava:guava:30.0-jre'
+
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
+
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.8.0'
     implementation group: 'net.java.dev.jna', name: 'jna-platform', version: '5.8.0'
- 
+
+    implementation group: 'org.ahocorasick', name: 'ahocorasick', version: '0.6.3'
+
 }
 
-application {
-    // Define the main class for the application.
-    mainClass = 'org.louisj.Zwm.Main'
-}
+// application {
+//     // Define the main class for the application.
+//     mainClass = 'org.louisj.Zwm.Main'
+// }
 
-jar {
-    // 指定jar包包名
-    // 指定版本号
-    // version = '0.0.1'
-    manifest {
-        // 指定jar的入口类
-        attributes "Manifest-Version": 1.0, 'Main-Class': 'org.louisj.Zwm.Main'
-    }
-}
+// jar {
+//     // 指定jar包包名
+//     // 指定版本号
+//     // version = '0.0.1'
+//     manifest {
+//         // 指定jar的入口类
+//         attributes "Manifest-Version": 1.0, 'Main-Class': 'org.louisj.Zwm.Main'
+//     }
+// }

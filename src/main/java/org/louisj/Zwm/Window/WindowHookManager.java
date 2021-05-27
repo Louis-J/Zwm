@@ -59,14 +59,14 @@ public class WindowHookManager {
 
     final int WH_MOUSE_LL = 14;
 
-    private static Logger logger = LogManager.getLogger("WindowManager");
+    private static Logger logger = LogManager.getLogger("WindowHookManager");
 
     public List<WindowFocusCallBack> eventWindowFocus = new ArrayList<>();
     public List<WindowDestroyCallBack> eventWindowDestroy = new ArrayList<>();
     public List<WindowCreateCallBack> eventWindowCreate = new ArrayList<>();
     public List<WindowUpdateCallBack> eventWindowUpdate = new ArrayList<>();
 
-    private Map<HWND, Window> windows = new HashMap<>();
+    public Map<HWND, Window> windows = new HashMap<>();
 
     private List<HANDLE> hooks = new ArrayList<>();
     private List<HHOOK> hookexs = new ArrayList<>();
@@ -91,10 +91,14 @@ public class WindowHookManager {
         // EVENT_OBJECT_LOCATIONCHANGE,
         // new HMODULE(), windowHook, 0, 0, 0));
 
-        // hookexs.add(WinHelper.MyUser32Inst.SetWindowsHookEx(WH_MOUSE_LL, mouseHook, new HMODULE(), 0));
+        // hookexs.add(WinHelper.MyUser32Inst.SetWindowsHookEx(WH_MOUSE_LL, mouseHook,
+        // new HMODULE(), 0));
 
         WinHelper.MyUser32Inst.EnumWindows((handle, param) -> {
-            RegisterWindow(handle);
+            // long hvalue = Pointer.nativeValue(handle.getPointer());
+            // logger.info("EnumWindows, handle = {}", hvalue);
+            // if (Window.IsAppWindow(handle))
+                RegisterWindow(handle);
             return true;
         }, null);
 
@@ -144,8 +148,8 @@ public class WindowHookManager {
                         UpdateWindow(hwnd, WindowUpdateType.Foreground);
                         break;
                     // case EVENT_SYSTEM_MOVESIZESTART:
-                    //     StartWindowMove(hwnd);
-                    //     break;
+                    // StartWindowMove(hwnd);
+                    // break;
                     case EVENT_SYSTEM_MOVESIZEEND:
                         EndWindowMove(hwnd);
                         break;
@@ -166,8 +170,13 @@ public class WindowHookManager {
     }
 
     private void RegisterWindow(HWND handle) {
-        if (windows.get(handle) == null) {
-            var window = new Window(handle);
+        if (windows.get(handle) == null && Window.IsAppWindow(handle)) {
+            int id = Window.GetWindowPid(handle);
+
+            logger.info("RegisterWindow, handle = {}, pid = {}", handle, id);
+            if (id == 0)
+                return;
+            var window = new Window(handle, id);
             windows.put(handle, window);
 
             for (var e : eventWindowCreate)
@@ -212,13 +221,13 @@ public class WindowHookManager {
     }
 
     // private void StartWindowMove(HWND handle) {
-    //     var window = windows.get(handle);
-    //     if (window != null) {
-    //         logger.info("StartWindowMove, {}", window);
+    // var window = windows.get(handle);
+    // if (window != null) {
+    // logger.info("StartWindowMove, {}", window);
 
-    //         for (var e : eventWindowUpdate)
-    //             e.Invoke(window, WindowUpdateType.MoveStart);
-    //     }
+    // for (var e : eventWindowUpdate)
+    // e.Invoke(window, WindowUpdateType.MoveStart);
+    // }
     // }
 
     private void EndWindowMove(HWND handle) {

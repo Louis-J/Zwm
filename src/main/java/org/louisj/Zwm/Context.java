@@ -9,7 +9,7 @@ import org.louisj.Zwm.VirtualDesk.IMonitorContainer;
 import org.louisj.Zwm.VirtualDesk.VirtualDeskContainer;
 import org.louisj.Zwm.VirtualDesk.NativeMonitorContainer;
 import org.louisj.Zwm.VirtualDesk.VirtualDeskManager;
-import org.louisj.Zwm.VirtualDesk.WindowRouter;
+import org.louisj.Zwm.VirtualDesk.VirtualDeskFilter;
 import org.louisj.Zwm.Window.WindowHookManager;
 
 public class Context {
@@ -19,7 +19,8 @@ public class Context {
     // }
     
     // public KeybindManager Keybinds;
-    public VirtualDeskManager vdMan;
+    public VirtualDeskManager vdMan = new VirtualDeskManager(this);
+    public VirtualDeskFilter vdFilter = new VirtualDeskFilter();
     public PluginManager pluginMan = new PluginManager();
     public WindowHookManager winhookMan = new WindowHookManager();
     // public WindowsManager windowMan = new WindowsManager();
@@ -27,7 +28,7 @@ public class Context {
     // public WindowRouter WindowRouter;
     // public IMonitorContainer MonitorContainer = new NativeMonitorContainer();
 
-    public MessageLoopThread mainloop = new MessageLoopThread();
+    private MessageLoopThread mainloop = new MessageLoopThread();
 
     // private System.Timers.Timer _timer = new System.Timers.Timer();
     // private Func<ILayoutEngine[]> _defaultLayouts;
@@ -53,20 +54,29 @@ public class Context {
         
     }
 
+    public void Start() {
+        mainloop.run();
+    }
+
+    public void Exit() {
+        mainloop.exit();
+    }
+
     public void Defer() {
         pluginMan.Defer();
         winhookMan.Defer();
+        vdMan.Defer();
     }
 
     public void DefaultConfig() {
-        vdMan = new VirtualDeskManager(this);
-
+        vdFilter.DefaultConfig();
+        
         winhookMan.eventWindowCreate.add((window)->vdMan.AddWindow(window));
         winhookMan.eventWindowDestroy.add((window)->vdMan.RemoveWindow(window));
         winhookMan.eventWindowUpdate.add((window, updateType)->vdMan.UpdateWindow(window, updateType));
 
-        winhookMan.Init();
-        winhookMan.Start();
+        // vdMan.CreateVirtualDesks(new String[]{"1", "2", "3", "4"});
+
 
     // context.WorkspaceContainer.CreateWorkspaces("1", "2", "3", "4", "5");
         // _timer.Elapsed += (s, e) => UpdateActiveHandles();

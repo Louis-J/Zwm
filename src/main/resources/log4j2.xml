@@ -26,7 +26,10 @@
         <File name="Window" fileName="logs\${sys:Time4File}\Window.log">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
         </File>
-        <File name="WindowManager" fileName="logs\${sys:Time4File}\WindowManager.log">
+        <File name="WindowHookManager" fileName="logs\${sys:Time4File}\WindowHookManager.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </File>
+        <File name="VirtualDeskFilter" fileName="logs\${sys:Time4File}\VirtualDeskFilter.log">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
         </File>
     </Appenders>
@@ -56,10 +59,15 @@
             <AppenderRef ref="Window" />
             <!-- <AppenderRef ref="Console" /> -->
         </Logger>
-        <Logger name="WindowManager" level="trace" additivity="true">
-            <AppenderRef ref="WindowManager" />
+        <Logger name="WindowHookManager" level="trace" additivity="true">
+            <AppenderRef ref="WindowHookManager" />
             <!-- <AppenderRef ref="Console" /> -->
         </Logger>
+        <Logger name="VirtualDeskFilter" level="trace" additivity="true">
+            <AppenderRef ref="VirtualDeskFilter" />
+            <!-- <AppenderRef ref="Console" /> -->
+        </Logger>
+        
         <Root level="info">
             <AppenderRef ref="Console" />
         </Root>

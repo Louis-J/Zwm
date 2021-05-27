@@ -34,28 +34,48 @@ public class Window {
     private HWND handle;
     private int processId;
 
-    private String processName;
-    private String windowClass;
-    private String windowTitle;
+    public String processName;
+    public String windowClass;
+    public String windowTitle;
 
     // private WindowLocation location;
     private boolean _didManualHide;
     // public WindowFocusedDelegate WindowFocused;
 
-    public Window(HWND handle) {
+    public static int GetWindowPid(HWND handle) {
+        IntByReference pProcessId = new IntByReference();
+        MyUser32.INSTANCE.GetWindowThreadProcessId(handle, pProcessId);
+        return pProcessId.getValue();
+    }
+
+    public Window(HWND handle, int processId) {
+        logger.info("Window, handle = {}", handle);
         this.handle = handle;
+        this.processId = processId;
 
         // com.sun.jna.ptr.IntByReference pProcessId;
         // MyUser32.INSTANCE.GetWindowThreadProcessId(handle, pProcessId);
         // processId = pProcessId.getValue();
-        processId = Kernel32.INSTANCE.GetProcessId(handle);
-        // processName = Kernel32Util.QueryFullProcessImageName(handle, 1);
-        processName = WinHelper.QueryWithBuffer2(new WinHelper.CallBackWithBuffer2() {
-            @Override
-            public boolean Invoke(char[] buffer, IntByReference pSize) {
-                return WinHelper.Kernel32Inst.QueryFullProcessImageName(handle, 1, buffer, pSize);
-            }
-        }, WinDef.MAX_PATH);
+        logger.info("Window, processId = {}", processId);
+        try {
+            processName = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
+                @Override
+                public int Invoke(char[] buffer, int size) {
+                    return WinHelper.MyUser32Inst.GetWindowModuleFileName(handle, buffer, size);
+                }
+            }, WinDef.MAX_PATH);
+        } catch (com.sun.jna.platform.win32.Win32Exception e) {
+            processName = "--NA--";
+        }
+        // processName = Kernel32Util.QueryFullProcessImageName(handle, 0);
+        // processName = WinHelper.QueryWithBuffer2(new WinHelper.CallBackWithBuffer2()
+        // {
+        // @Override
+        // public boolean Invoke(char[] buffer, IntByReference pSize) {
+        // return WinHelper.Kernel32Inst.QueryFullProcessImageName(handle, 1, buffer,
+        // pSize);
+        // }
+        // }, WinDef.MAX_PATH);
 
         windowTitle = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
             @Override
@@ -140,7 +160,7 @@ public class Window {
 
     public void Focus() {
         if (!IsFocused()) {
-            logger.info("[{0}] :: Focus", this);
+            logger.info("Focus", this);
             // Win32Helper.ForceForegroundWindow(_handle);
             // WindowFocused?.Invoke();
 
@@ -152,7 +172,7 @@ public class Window {
     public void Hide() {
         final int SW_HIDE = 0;
 
-        logger.info("[{0}] :: Hide", this);
+        logger.info("Hide, {}", this);
         if (CanLayout()) {
             _didManualHide = true;
         }
@@ -162,7 +182,7 @@ public class Window {
     public void ShowNormal() {
         final int SW_SHOWNOACTIVATE = 4;
 
-        logger.info("[{0}] :: ShowNormal", this);
+        logger.info("ShowNormal, {}", this);
         _didManualHide = false;
         WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWNOACTIVATE);
     }
@@ -170,7 +190,7 @@ public class Window {
     public void ShowMaximized() {
         final int SW_SHOWMAXIMIZED = 3;
 
-        logger.info("[{0}] :: ShowMaximized", this);
+        logger.info("ShowMaximized, {}", this);
         _didManualHide = false;
         WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWMAXIMIZED);
     }
@@ -178,7 +198,7 @@ public class Window {
     public void ShowMinimized() {
         final int SW_SHOWMINIMIZED = 2;
 
-        logger.info("[{0}] :: ShowMinimized", this);
+        logger.info("ShowMinimized, {}", this);
         _didManualHide = false;
         WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWMINIMIZED);
     }
@@ -201,13 +221,22 @@ public class Window {
         final int WM_SYSCOMMAND = 0x0112;
         final int SC_CLOSE = 0xF060;
 
-        logger.info("[{0}] :: Close", this);
+        logger.info("Close", this);
         WinHelper.MyUser32Inst.SendNotifyMessage(handle, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
     }
 
     @Override
     public String toString() {
         return handle.toString() + '|' + windowTitle + '|' + windowClass + '|' + processName;
+    }
+
+
+    public static boolean IsAppWindow(HWND handle) {
+        final int WS_EX_NOACTIVATE = 0x08000000;
+        final int WS_CHILD = 0x40000000;
+
+        return WinHelper.MyUser32Inst.IsWindowVisible(handle) && (GetWindowExStyleLongPtr(handle) & WS_EX_NOACTIVATE) == 0
+                && (GetWindowStyleLongPtr(handle) & WS_CHILD) == 0;
     }
 
     // privates
@@ -218,7 +247,7 @@ public class Window {
         return (isCloaked.getValue() != (byte) 0);
     }
 
-    private int GetWindowStyleLongPtr() {
+    private static int GetWindowStyleLongPtr(HWND handle) {
         if (WinHelper.Is64Bit) {
             return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_STYLE).intValue();
         } else {
@@ -226,7 +255,7 @@ public class Window {
         }
     }
 
-    private int GetWindowExStyleLongPtr() {
+    private static int GetWindowExStyleLongPtr(HWND handle) {
         if (WinHelper.Is64Bit) {
             return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_EXSTYLE).intValue();
         } else {
@@ -238,8 +267,8 @@ public class Window {
         final int WS_EX_NOACTIVATE = 0x08000000;
         final int WS_CHILD = 0x40000000;
 
-        return WinHelper.MyUser32Inst.IsWindowVisible(handle) && (GetWindowExStyleLongPtr() & WS_EX_NOACTIVATE) == 0
-                && (GetWindowStyleLongPtr() & WS_CHILD) == 0;
+        return WinHelper.MyUser32Inst.IsWindowVisible(handle) && (GetWindowExStyleLongPtr(handle) & WS_EX_NOACTIVATE) == 0
+                && (GetWindowStyleLongPtr(handle) & WS_CHILD) == 0;
     }
 
     private boolean IsAltTabWindow() {
@@ -247,14 +276,16 @@ public class Window {
         final int WS_EX_APPWINDOW = 0x40000;
         final int GW_OWNER = 4;
 
-        int exStyle = GetWindowExStyleLongPtr();
-        if ((exStyle & WS_EX_TOOLWINDOW) != 0
-                || Pointer.nativeValue(WinHelper.MyUser32Inst.GetWindow(handle, GW_OWNER).getPointer()) != 0) {
+        int exStyle = GetWindowExStyleLongPtr(handle);
+        if ((exStyle & WS_EX_TOOLWINDOW) != 0)
             return false;
-        }
-        if ((exStyle & WS_EX_APPWINDOW) != 0) {
+
+        var h = WinHelper.MyUser32Inst.GetWindow(handle, GW_OWNER);
+        if (h == null || Pointer.nativeValue(h.getPointer()) != 0)
+            return false;
+
+        if ((exStyle & WS_EX_APPWINDOW) != 0)
             return true;
-        }
 
         return true;
         // I am leaving this code here for testing purposes, but I don't think I need

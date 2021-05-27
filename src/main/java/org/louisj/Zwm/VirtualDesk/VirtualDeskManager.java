@@ -1,5 +1,7 @@
 package org.louisj.Zwm.VirtualDesk;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EventListener;
 import java.util.EventObject;
 import java.util.HashMap;
@@ -39,18 +41,18 @@ public class VirtualDeskManager {
 
     private Context context;
 
-    private int focusedIndex;
+    private int focusedIndex = 0;
 
     private Map<Window, VirtualDesk> windowsToVirtualDesk;
-    private List<VirtualDesk> virtualDesks;
+    public List<VirtualDesk> virtualDesks = new ArrayList<>();
 
-    public List<VirtualDeskUpdatedCallBack> eventVirtualDeskUpdated;
-    public List<WindowAddedCallBack> eventWindowAdded;
-    public List<WindowUpdatedCallBack> eventWindowUpdated;
-    public List<WindowRemovedCallBack> eventWindowRemoved;
-    public List<WindowMovedCallBack> eventWindowMoved;
+    public List<VirtualDeskUpdatedCallBack> eventVirtualDeskUpdated = new ArrayList<>();
+    public List<WindowAddedCallBack> eventWindowAdded = new ArrayList<>();
+    public List<WindowUpdatedCallBack> eventWindowUpdated = new ArrayList<>();
+    public List<WindowRemovedCallBack> eventWindowRemoved = new ArrayList<>();
+    public List<WindowMovedCallBack> eventWindowMoved = new ArrayList<>();
 
-    public WindowRouter router;
+    public VirtualDeskFilter router;
 
     public VirtualDeskManager(Context context) {
         this.context = context;
@@ -101,6 +103,8 @@ public class VirtualDeskManager {
             source.HideAll();
             target.ShowAll();
             target.Focus();
+
+            focusedIndex = index;
 
             for (var e : eventVirtualDeskUpdated)
                 e.Invoke();
@@ -171,7 +175,12 @@ public class VirtualDeskManager {
     }
 
     public void AddWindow(Window window) {
-        logger.info("AddWindow({0})", window);
+        // logger.info("AddWindow, {}", window);
+        if(context.vdFilter.CheckIgnore(window))
+            return;
+
+        logger.info("AddWindow, {}", window);
+
         VirtualDesk target;
         target = virtualDesks.get(focusedIndex);
         // router
@@ -188,7 +197,7 @@ public class VirtualDeskManager {
     }
 
     public void RemoveWindow(Window window) {
-        logger.info("RemoveWindow({0})", window);
+        logger.info("RemoveWindow, {}", window);
         VirtualDesk vd = windowsToVirtualDesk.get(window);
         if (vd != null) {
             vd.RemoveWindow(window);
@@ -255,11 +264,20 @@ public class VirtualDeskManager {
     public void SetState(VirtualDeskState state) {
     }
 
-    public void Initialize(List<Window> windows) {
-        logger.info("Initialize({0})", windows);
+    public void Init(Collection<Window> collection) {
+        // logger.info("Init, {}", collection);
 
-        for (var w : windows) {
+        for (var w : collection) {
             AddWindow(w);
         }
+    }
+
+    public void Defer() {
+        logger.info("VirtualDeskManager Defer Called");
+
+        var source = virtualDesks.get(0);
+        for (int i = 1; i < virtualDesks.size(); i++)
+            MoveAllWindows(virtualDesks.get(i), source);
+        SwitchToVirtualDesk(0);
     }
 }

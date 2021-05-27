@@ -5,6 +5,17 @@
 		}
 	],
 	"settings": {
-		"java.configuration.updateBuildConfiguration": "automatic"
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"gradle.javaDebug": {
+			"tasks": [
+				"Zwm",
+				"Launcher:run",
+				
+				"run",
+				"test",
+				"subproject:customJavaExecTask"
+			],
+			"clean": true
+		}
 	}
 }

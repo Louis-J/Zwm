@@ -1,9 +1,11 @@
 package org.louisj.Zwm.VirtualDesk;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,8 +25,8 @@ public class VirtualDesk {
     public boolean isIndicating;
 
     private Context context;
-    public Collection<Window> allWindows;
-    public Collection<Window> layoutWindows;
+    public List<Window> allWindows = new ArrayList<>();
+    public List<Window> layoutWindows = new ArrayList<>();
     private ILayout[] layouts;
     private int layoutIndex = 0;
 
@@ -45,7 +47,10 @@ public class VirtualDesk {
     }
 
     public Window GetFocusedWindow() {
+        if(allWindows.size() == 0)
+            return null;
         return allWindows.iterator().next();
+        // return allWindows.get(0);
     }
 
     // public Window GetLastFocusedWindow() {
