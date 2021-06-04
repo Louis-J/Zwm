@@ -4,7 +4,7 @@ import pers.louisj.Zwm.Core.Message.Message;
 import pers.louisj.Zwm.Core.Window.Window;
 
 public enum VirtualDeskEvent {
-    SwitchToNextVirtualDesk, SwitchToPreviousVirtualDesk,
+    SwitchToNextVirtualDesk,
     SwitchToVirtualDesk,
 
     VirtualDeskUpdated,

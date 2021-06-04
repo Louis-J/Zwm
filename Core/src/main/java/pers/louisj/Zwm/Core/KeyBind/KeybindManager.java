@@ -166,8 +166,9 @@ public class KeybindManager {
         short realkeys = (short) ((short) 256 * funcKey + key);
         var callback = keybinds.get(realkeys);
         if (callback != null) {
-            // callback.Invoke();
             logger.info("DoKeyboardEvent, {}", GetKeybindString(funcKey, key));
+            callback.Invoke();
+            logger.info("DoKeyboardEvent End");
             return true;
         }
         return false;
@@ -221,6 +222,7 @@ public class KeybindManager {
 
     protected class MyKeyHookProc implements LowLevelKeyboardProc {
         byte funcKeyState = 0;
+
         public LRESULT callback(int nCode, WPARAM wParam, KBDLLHOOKSTRUCT lParam) {
             if (nCode == 0) {
                 int event = wParam.intValue();
@@ -310,13 +312,13 @@ public class KeybindManager {
         Register("Maximize Focused Window and Minimize Others", KeyCode.FuncKey.LALT, KeyCode.VK_Z,
                 () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.FocusedWindowMaximize, null)));
 
-        for (byte i = 1; i <= 9; i++) {
+        for (byte i = 0; i < 9; i++) {
+            var stri = String.valueOf(i + 1);
             var obji = Integer.valueOf(i);
-            Register("Switch Focused Monitor to Virtual Desk " + String.valueOf(i), KeyCode.FuncKey.LALT,
-                    (byte) (KeyCode.VK_0 + i),
+            Register("Switch Focused Monitor to Virtual Desk " + stri, KeyCode.FuncKey.LALT, (byte) (KeyCode.VK_1 + i),
                     () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.SwitchToVirtualDesk, obji)));
-            Register("Move Focused Window to Virtual Desk " + String.valueOf(i),
-                    (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL), (byte) (KeyCode.VK_0 + i),
+            Register("Move Focused Window to Virtual Desk " + stri,
+                    (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL), (byte) (KeyCode.VK_1 + i),
                     () -> eventChanForVDM
                             .put(new VirtualDeskMessage(VirtualDeskEvent.SwitchWindowToVirtualDesk, obji)));
         }
@@ -344,5 +346,7 @@ public class KeybindManager {
 
         Register("Toggle Tiling State for Focused Window", KeyCode.FuncKey.LALT, KeyCode.VK_T,
                 () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.ToggleTiling, null)));
+
+        Register("Exit The Program", KeyCode.FuncKey.LALT, KeyCode.VK_ESCAPE, () -> context.Exit());
     }
 }

@@ -11,7 +11,8 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import pers.louisj.Zwm.Core.Derived.GridLayout;
+// import pers.louisj.Zwm.Core.Derived.GridLayout;
+import pers.louisj.Zwm.Core.Derived.GridLayoutSimp;
 import pers.louisj.Zwm.Core.Derived.ILayout;
 import pers.louisj.Zwm.Core.Message.WindowMessage.WindowEvent;
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
@@ -24,15 +25,44 @@ public class VirtualDesk {
     private String name;
 
     public HashSet<Window> allWindows = new HashSet<>();
-    private GridLayout layout;
-    private Window focusedWindow;
+    private GridLayoutSimp layout;
+    public Window focusedWindow;
 
     public VirtualDeskRouter router;
+
+    public ActionImpl Action = new ActionImpl();
+
+    public class ActionImpl {
+        public void TurnWindowLeft() {
+            if (focusedWindow == null)
+                return;
+            layout.ShiftLeft(focusedWindow);
+        }
+
+        public void TurnWindowRight() {
+            if (focusedWindow == null)
+                return;
+            layout.ShiftRight(focusedWindow);
+        }
+
+        public void TurnWindowUp() {
+            if (focusedWindow == null)
+                return;
+            layout.ShiftUp(focusedWindow);
+        }
+
+        public void TurnWindowDown() {
+            if (focusedWindow == null)
+                return;
+            layout.ShiftDown(focusedWindow);
+        }
+    }
 
     public VirtualDesk(String name, VirtualDeskRouter router, ILayout layout) {
         this.name = name;
         this.router = router;
-        this.layout = new GridLayout(3, (float) 0.05, false);
+        // this.layout = new GridLayout(3, (float) 0.05, false);
+        this.layout = new GridLayoutSimp();
         // this.layout = null;
     }
 
@@ -54,10 +84,6 @@ public class VirtualDesk {
         return copy;
     }
 
-    public Window GetFocusedWindow() {
-        return focusedWindow;
-    }
-
     public boolean isEmpty() {
         return allWindows.size() == 0;
     }
@@ -69,7 +95,7 @@ public class VirtualDesk {
         logger.info("AddWindow, {}", window);
         allWindows.add(window);
 
-        if (layout != null && window.CanLayout()) {
+        if (layout != null && window.Query.CanLayout()) {
             layout.AddWindow(window);
         }
     }
@@ -87,7 +113,7 @@ public class VirtualDesk {
         logger.info("RemoveWindow, {}", window);
         allWindows.remove(window);
 
-        if (layout != null && window.CanLayout()) {
+        if (layout != null && window.Query.CanLayout()) {
             layout.RemoveWindow(window);
         }
     }
@@ -102,6 +128,8 @@ public class VirtualDesk {
         // if (layoutWindows.contains(window))
         // DoLayout();
         // }
+        window.Refresh.RefreshState();
+        layout.ToggleMinimize(window);
     }
 
     // public void ResetLayout() {
@@ -226,18 +254,17 @@ public class VirtualDesk {
 
     public void HideAll() {
         for (var w : allWindows)
-            w.Hide();
+            w.Action.Hide();
     }
 
     public void ShowAll() {
         for (var w : allWindows)
-            w.ShowInCurrentState();
+            w.Action.ShowInCurrentState();
     }
 
     public void Focus() {
-        var firstFocused = GetFocusedWindow();
-        if (firstFocused != null)
-            firstFocused.Focus();
+        if (focusedWindow != null)
+            focusedWindow.Action.Focus();
     }
 
     public void SetScreen(Rectangle screen) {

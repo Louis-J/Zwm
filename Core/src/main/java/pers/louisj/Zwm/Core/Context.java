@@ -59,7 +59,6 @@ public class Context {
         keyBindMan.DefaultConfig();
         vdFilter.DefaultConfig();
 
-
         // SystemTray.AddToContextMenu("enable/disable workspacer", () => Enabled =
         // !Enabled);
         // SystemTray.AddToContextMenu("show/hide keybind help", () =>
@@ -130,6 +129,7 @@ public class Context {
             int getMessageReturn;
             while ((getMessageReturn = WinHelper.MyUser32Inst.GetMessage(msg, null, 0, 0)) != 0) {
                 if (getMessageReturn != -1) {
+                    logger.info("Main Loop Run, {}", getMessageReturn);
                     // Normal processing
                     if (msg.message == WM_DISPLAYCHANGE) {
                         vdInputChan.put(new MonitorMessage());
@@ -142,6 +142,7 @@ public class Context {
                     logger.error(new Win32Exception(WinHelper.Kernel32Inst.GetLastError()).toString());
                 }
             }
+            logger.info("Main Loop Run Over");
         }
 
         public void exit() {

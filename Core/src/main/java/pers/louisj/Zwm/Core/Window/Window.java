@@ -57,11 +57,11 @@ public class Window {
         return pProcessId.getValue();
     }
 
-    public Action Action = new Action();
-    public Refresh Refresh = new Refresh();
-    public Query Query = new Query();
+    public ActionImpl Action = new ActionImpl();
+    public RefreshImpl Refresh = new RefreshImpl();
+    public QueryImpl Query = new QueryImpl();
 
-    class Action {
+    public class ActionImpl {
         public void Focus() {
             logger.info("Focus, {}", this);
             WinHelper.MyUser32Inst.SetForegroundWindow(handle);
@@ -123,8 +123,16 @@ public class Window {
         }
     }
 
-    // TODO:
-    class Refresh {
+    public class RefreshImpl {
+        public void RefreshTitle() {
+            windowTitle = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
+                @Override
+                public int Invoke(char[] buffer, int size) {
+                    return WinHelper.MyUser32Inst.GetWindowText(handle, buffer, size);
+                }
+            }, 128);
+        }
+
         public void RefreshRectangle() {
             RECT crect = new RECT();
             WinHelper.MyUser32Inst.GetWindowRect(handle, crect);
@@ -142,6 +150,7 @@ public class Window {
                 state |= 4;
         }
 
+        // TODO:
         public void RefreshOffset() {
         }
 
@@ -171,7 +180,7 @@ public class Window {
     }
 
     // TODO:
-    class Query {
+    public class QueryImpl {
         public boolean IsFocused() {
             return (state & 0x4) != 0;
         }
@@ -183,9 +192,14 @@ public class Window {
         public boolean IsMaximized() {
             return (state & 0x3) == 2;
         }
+
+        public boolean CanLayout() {
+            return canLayout;
+        }
     }
 
     public static class QueryStatic {
+        // TODO:
         public static int GetWindowPid(HWND handle) {
             return 0;
         }
@@ -213,16 +227,9 @@ public class Window {
                     return WinHelper.MyUser32Inst.GetWindowModuleFileName(handle, buffer, size);
                 }
             }, WinDef.MAX_PATH);
-        } catch (com.sun.jna.platform.win32.Win32Exception e) {
+        } catch (Win32Exception e) {
             processName = "--NA--";
         }
-
-        windowTitle = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
-            @Override
-            public int Invoke(char[] buffer, int size) {
-                return WinHelper.MyUser32Inst.GetWindowText(handle, buffer, size);
-            }
-        }, 128);
 
         windowClass = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
             @Override
@@ -231,39 +238,10 @@ public class Window {
             }
         }, 128);
 
-        // WinHelper.MyUser32Inst.GetWindowText()
-        // location = new WindowLocation(rect.left, rect.top, rect.right - rect.left,
-        // rect.bottom - rect.top, state);
-        RefreshRectangle();
-        RefreshState();
-        QueryCanLayout();
-    }
-
-    // public WindowLocation GetLocation() {
-    // return location;
-    // }
-
-    public void RefreshLocation() {
-        RefreshRectangle();
-        RefreshState();
-        // location = new WindowLocation(rect.x, rect.y, rect.width, rect.height,
-        // state);
-    }
-
-    public void RefreshRectangle() {
-        RECT crect = new RECT();
-        WinHelper.MyUser32Inst.GetWindowRect(handle, crect);
-        this.rect = new Rectangle(crect.left, crect.top, crect.right - crect.left, crect.bottom - crect.top);
-    }
-
-    public void RefreshState() {
-        state = 0;
-        if (WinHelper.MyUser32Inst.IsIconic(handle))
-            state = 1;
-        else if (WinHelper.MyUser32Inst.IsZoomed(handle))
-            state = 2;
-        if (WinHelper.MyUser32Inst.GetForegroundWindow() == handle)
-            state += 10;
+        Refresh.RefreshTitle();
+        Refresh.RefreshRectangle();
+        Refresh.RefreshState();
+        Refresh.RefreshCanLayout();
     }
 
     // public Rectangle GetOffset() {
@@ -301,88 +279,12 @@ public class Window {
     // return null;
     // }
 
-    public boolean QueryCanLayout() {
-        canLayout = (!IsCloaked() && IsAppWindow() && IsAltTabWindow());
-        return canLayout;
-    }
-
-    public boolean CanLayout() {
-        return canLayout;
-    }
-
     public boolean IsLayout() {
         return isLayout;
     }
 
-    public boolean IsFocused() {
-        return state >= 10;
-    }
-
-    public boolean IsMinimized() {
-        return state % 10 == 1;
-    }
-
-    public boolean IsMaximized() {
-        return state % 10 == 2;
-    }
-
-    public void Focus() {
-        if (!IsFocused()) {
-            logger.info("Focus, {}", this);
-            // Win32Helper.ForceForegroundWindow(_handle);
-
-            WinHelper.MyUser32Inst.SetForegroundWindow(handle);
-        }
-    }
-
-    public void Hide() {
-        final int SW_HIDE = 0;
-
-        logger.info("Hide, {}", this);
-        WinHelper.MyUser32Inst.ShowWindow(handle, SW_HIDE);
-    }
-
-    public void ShowNormal() {
-        final int SW_SHOWNOACTIVATE = 4;
-
-        logger.info("ShowNormal, {}", this);
-        WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWNOACTIVATE);
-    }
-
-    public void ShowMaximized() {
-        final int SW_SHOWMAXIMIZED = 3;
-
-        logger.info("ShowMaximized, {}", this);
-        WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWMAXIMIZED);
-    }
-
-    public void ShowMinimized() {
-        final int SW_SHOWMINIMIZED = 2;
-
-        logger.info("ShowMinimized, {}", this);
-        WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWMINIMIZED);
-    }
-
-    public void ShowInCurrentState() {
-        if (IsMinimized()) {
-            ShowMinimized();
-        } else if (IsMaximized()) {
-            ShowMaximized();
-        } else {
-            ShowNormal();
-        }
-    }
-
     public void BringToTop() {
         WinHelper.MyUser32Inst.BringWindowToTop(handle);
-    }
-
-    public void Close() {
-        final int WM_SYSCOMMAND = 0x0112;
-        final int SC_CLOSE = 0xF060;
-
-        logger.info("Close", this);
-        WinHelper.MyUser32Inst.SendNotifyMessage(handle, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
     }
 
     @Override

@@ -18,6 +18,7 @@ import pers.louisj.Zwm.Core.Message.Message;
 import pers.louisj.Zwm.Core.Message.WindowMessage.WindowEvent;
 import pers.louisj.Zwm.Core.Message.WindowMessage.WindowMessage;
 import pers.louisj.Zwm.Core.Utils.Channel;
+import pers.louisj.Zwm.Core.Utils.Channel2;
 import pers.louisj.Zwm.Core.WinApi.WinHelper;
 
 import com.sun.jna.platform.win32.WinUser.WinEventProc;
@@ -69,7 +70,7 @@ public class WindowHookManager {
     private List<HHOOK> hookexs = new ArrayList<>();
 
     private Thread messageLoop = new MessageLoop();
-    private Channel<HookMessage> inputChan = new Channel<>();
+    private Channel<HookMessage> inputChan = new Channel2<>();
 
     public WindowHookManager() {
     }
@@ -195,7 +196,10 @@ public class WindowHookManager {
     private void UpdateWindow(HWND handle, WindowEvent updateType) {
         var window = windows.get(handle);
         if (window == null) {
-            RegisterWindow(handle);
+            // RegisterWindow(handle);
+            if (updateType == WindowEvent.Foreground)
+                for (var e : eventChans)
+                    e.put(new WindowMessage(null, updateType));
         } else {
             for (var e : eventChans)
                 e.put(new WindowMessage(window, updateType));
@@ -230,6 +234,7 @@ public class WindowHookManager {
             super();
             setName("WinHookMan Thread");
         }
+
         @Override
         public void run() {
             while (true) {

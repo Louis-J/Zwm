@@ -21,6 +21,7 @@ import pers.louisj.Zwm.Core.Message.VirtualDeskMessage.VirtualDeskMessage;
 import pers.louisj.Zwm.Core.Message.WindowMessage.WindowEvent;
 import pers.louisj.Zwm.Core.Message.WindowMessage.WindowMessage;
 import pers.louisj.Zwm.Core.Utils.Channel;
+import pers.louisj.Zwm.Core.Utils.Channel2;
 import pers.louisj.Zwm.Core.VirtualDesk.VirtualDesk;
 import pers.louisj.Zwm.Core.VirtualDesk.VirtualDeskRouter;
 import pers.louisj.Zwm.Core.Window.Window;
@@ -44,7 +45,7 @@ public class VirtualDeskManager {
     private int focusedIndex = 0;
     public VirtualDeskFilter router;
 
-    public Channel<Message> inputChan = new Channel<>(512);
+    public Channel<Message> inputChan = new Channel2<>(1024);
     public List<Channel<Message>> eventChans = new ArrayList<>();
     private Thread messageLoop = new MessageLoop();
 
@@ -149,7 +150,7 @@ public class VirtualDeskManager {
     public Window MoveFocusedWindowOut() {
         logger.info("MoveFocusedWindowToVirtualDesk");
         var focusedVd = virtualDesks.get(focusedIndex);
-        var window = focusedVd.GetFocusedWindow();
+        var window = focusedVd.focusedWindow;
         if (window == null)
             return null;
 
@@ -214,22 +215,61 @@ public class VirtualDeskManager {
 
     public void UpdateWindow(Window window, WindowEvent event) {
         logger.info("UpdateWindow, {}, {}", window, event);
-        VirtualDesk vd = windowsToVirtualDesk.get(window);
-        if (vd != null) {
-            if (vd == virtualDesks.get(focusedIndex)) {
-                if (event == WindowEvent.Foreground) {
-                    // eventVirtualDeskUpdated
-                    for (var e : eventChans)
-                        e.put(new WindowMessage(window, event));
-                } else if (event == WindowEvent.MoveEnd) {
-                    // ResizeOrSwapWindow();
+        if (event == WindowEvent.Foreground) {
+            if (window == null) {
+                VirtualDesk vd = virtualDesks.get(focusedIndex);
+                vd.focusedWindow = null;
+            } else {
+                VirtualDesk vd = windowsToVirtualDesk.get(window);
+                if (vd == null) {
+                    logger.info("UpdateWindow, Foreground, 1");
+                    return;
                 }
-                vd.UpdateWindow(window, event);
-                // eventWindowUpdated
-                for (var e : eventChans)
-                    e.put(new WindowMessage(window, event));
+                int index = virtualDesks.indexOf(vd);
+                if (index == -1) {
+                    logger.error("UpdateWindow, Foreground, 2");
+                    return;
+                }
+                focusedIndex = index;
+                vd.focusedWindow = window;
+                logger.info("UpdateWindow, Foreground, 3");
             }
         }
+        if (window == null) {
+            return;
+        }
+        switch (event) {
+            case MinimizeStart:
+            case MinimizeEnd: {
+                VirtualDesk vd = windowsToVirtualDesk.get(window);
+                if (vd == null) {
+                    logger.error("UpdateWindow, MinimizeToggle, 1");
+                    return;
+                }
+                vd.UpdateWindow(window, event);
+            }
+            default:
+                break;
+        }
+        // VirtualDesk vd = windowsToVirtualDesk.get(window);
+        // if (vd != null) {
+        // if (vd == virtualDesks.get(focusedIndex)) {
+        // if (event == WindowEvent.Foreground) {
+        // if(window == null) {
+
+        // }
+        // // eventVirtualDeskUpdated
+        // for (var e : eventChans)
+        // e.put(new WindowMessage(window, event));
+        // } else if (event == WindowEvent.MoveEnd) {
+        // // ResizeOrSwapWindow();
+        // }
+        // vd.UpdateWindow(window, event);
+        // // eventWindowUpdated
+        // for (var e : eventChans)
+        // e.put(new WindowMessage(window, event));
+        // }
+        // }
     }
 
     // private void TrySwapWindowToMouse(Window window)
@@ -413,12 +453,52 @@ public class VirtualDeskManager {
                             break;
                     }
                 } else if (msg instanceof VirtualDeskMessage) {
-                    logger.info("VDMan.MessageLoop, VirtualDeskMessage");
                     var vdmsg = (VirtualDeskMessage) msg;
+                    logger.info("VDMan.MessageLoop, VirtualDeskMessage, {}", vdmsg.event);
                     switch (vdmsg.event) {
                         case SwitchToVirtualDesk:
                             int index = ((Integer) vdmsg.param).intValue();
                             SwitchToVirtualDesk(index);
+                            break;
+                        case SwitchToNextVirtualDesk:
+                            SwitchToNextVirtualDesk();
+                            break;
+                        case SwitchToPrevVirtualDesk:
+                            SwitchToPreviousVirtualDesk();
+                            break;
+                        case CloseFocusedWindow: {
+                            var focusedWindow = virtualDesks.get(focusedIndex).focusedWindow;
+                            if (focusedWindow != null)
+                                focusedWindow.Action.SendClose();
+                            break;
+                        }
+                        case TurnWindowLeft: {
+                            var focusdVD = virtualDesks.get(focusedIndex);
+                            focusdVD.Action.TurnWindowLeft();
+                            break;
+                        }
+                        case TurnWindowRight: {
+                            var focusdVD = virtualDesks.get(focusedIndex);
+                            focusdVD.Action.TurnWindowRight();
+                            break;
+                        }
+                        case TurnWindowUp: {
+                            var focusdVD = virtualDesks.get(focusedIndex);
+                            focusdVD.Action.TurnWindowUp();
+                            break;
+                        }
+                        case TurnWindowDown: {
+                            var focusdVD = virtualDesks.get(focusedIndex);
+                            focusdVD.Action.TurnWindowDown();
+                            break;
+                        }
+                        case ResetLayout:
+                            // TODO:
+                            break;
+                        // TODO:
+                        // SwitchWindowToVirtualDesk, SwitchToPrevVirtualDesk,
+                        // SwitchWindowToPrevVirtualDesk, SwitchWindowToNextVirtualDesk, ToggleTiling,
+                        // FocusedWindowClose, FocusedWindowMinimize, FocusedWindowMaximize,
                         default:
                             break;
                     }
