@@ -5,11 +5,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinDef.DWORD;
 import com.sun.jna.platform.win32.WinDef.HMODULE;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.LONG;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
+import com.sun.jna.platform.win32.WinUser.WinEventProc;
+import com.sun.jna.platform.win32.WinUser.HHOOK;
+
+// import com.sun.jna.platform.win32.WinUser.HOOKPROC;
+// import com.sun.jna.platform.win32.WinDef.LRESULT;
+// import com.sun.jna.platform.win32.WinDef.WPARAM;
+// import com.sun.jna.platform.win32.WinDef.LPARAM;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,16 +28,6 @@ import pers.louisj.Zwm.Core.Message.WindowMessage.WindowMessage;
 import pers.louisj.Zwm.Core.Utils.Channel;
 import pers.louisj.Zwm.Core.Utils.Channel2;
 import pers.louisj.Zwm.Core.WinApi.WinHelper;
-
-import com.sun.jna.platform.win32.WinUser.WinEventProc;
-import com.sun.jna.platform.win32.WinUser.HOOKPROC;
-import com.sun.jna.platform.win32.WinUser.HHOOK;
-import com.sun.jna.platform.win32.WinDef.LRESULT;
-import com.sun.jna.platform.win32.WinDef.WPARAM;
-import com.sun.jna.platform.win32.WinDef.LPARAM;
-import com.sun.jna.platform.win32.User32Util.MessageLoopThread;
-
-import com.sun.jna.Pointer;
 
 public class WindowHookManager {
     private class HookMessage {
@@ -51,14 +49,14 @@ public class WindowHookManager {
     private static final int EVENT_SYSTEM_MINIMIZESTART = 0x0016;
     private static final int EVENT_SYSTEM_MINIMIZEEND = 0x0017;
 
-    private static final int EVENT_SYSTEM_MOVESIZESTART = 0x000A;
+    // private static final int EVENT_SYSTEM_MOVESIZESTART = 0x000A;
     private static final int EVENT_SYSTEM_MOVESIZEEND = 0x000B;
 
     private static final int EVENT_SYSTEM_FOREGROUND = 0x0003;
 
-    private static final int EVENT_OBJECT_LOCATIONCHANGE = 0x800B;
+    // private static final int EVENT_OBJECT_LOCATIONCHANGE = 0x800B;
 
-    private static final int WH_MOUSE_LL = 14;
+    // private static final int WH_MOUSE_LL = 14;
 
     private static Logger logger = LogManager.getLogger("WindowHookManager");
 
@@ -70,7 +68,7 @@ public class WindowHookManager {
     private List<HHOOK> hookexs = new ArrayList<>();
 
     private Thread messageLoop = new MessageLoop();
-    private Channel<HookMessage> inputChan = new Channel2<>();
+    private Channel<HookMessage> channelIn = new Channel2<>();
 
     public WindowHookManager() {
     }
@@ -94,7 +92,7 @@ public class WindowHookManager {
         // new HMODULE(), 0));
 
         WinHelper.MyUser32Inst.EnumWindows((handle, param) -> {
-            inputChan.put(new HookMessage(handle, WindowEvent.Add));
+            channelIn.put(new HookMessage(handle, WindowEvent.Add));
             return true;
         }, null);
     }
@@ -105,7 +103,7 @@ public class WindowHookManager {
 
     public void Defer() {
         logger.info("WindowHookManager Defer Start");
-        inputChan.put(null);
+        channelIn.put(null);
         for (var h : hooks)
             WinHelper.MyUser32Inst.UnhookWinEvent(h);
         for (var h : hookexs)
@@ -126,31 +124,31 @@ public class WindowHookManager {
             if (EventWindowIsValid(idChild, idObject, hwnd)) {
                 switch (event.intValue()) {
                     case EVENT_OBJECT_SHOW:
-                        inputChan.put(new HookMessage(hwnd, WindowEvent.Add));
+                        channelIn.put(new HookMessage(hwnd, WindowEvent.Add));
                         break;
                     case EVENT_OBJECT_DESTROY:
-                        inputChan.put(new HookMessage(hwnd, WindowEvent.Remove));
+                        channelIn.put(new HookMessage(hwnd, WindowEvent.Remove));
                         break;
                     case EVENT_OBJECT_CLOAKED:
-                        inputChan.put(new HookMessage(hwnd, WindowEvent.Hide));
+                        channelIn.put(new HookMessage(hwnd, WindowEvent.Hide));
                         break;
                     case EVENT_OBJECT_UNCLOAKED:
-                        inputChan.put(new HookMessage(hwnd, WindowEvent.Show));
+                        channelIn.put(new HookMessage(hwnd, WindowEvent.Show));
                         break;
                     case EVENT_SYSTEM_MINIMIZESTART:
-                        inputChan.put(new HookMessage(hwnd, WindowEvent.MinimizeStart));
+                        channelIn.put(new HookMessage(hwnd, WindowEvent.MinimizeStart));
                         break;
                     case EVENT_SYSTEM_MINIMIZEEND:
-                        inputChan.put(new HookMessage(hwnd, WindowEvent.MinimizeEnd));
+                        channelIn.put(new HookMessage(hwnd, WindowEvent.MinimizeEnd));
                         break;
                     case EVENT_SYSTEM_FOREGROUND:
-                        inputChan.put(new HookMessage(hwnd, WindowEvent.Foreground));
+                        channelIn.put(new HookMessage(hwnd, WindowEvent.Foreground));
                         break;
                     // case EVENT_SYSTEM_MOVESIZESTART:
                     // StartWindowMove(hwnd);
                     // break;
                     case EVENT_SYSTEM_MOVESIZEEND:
-                        inputChan.put(new HookMessage(hwnd, WindowEvent.MoveEnd));
+                        channelIn.put(new HookMessage(hwnd, WindowEvent.MoveEnd));
                         break;
                     // case EVENT_OBJECT_LOCATIONCHANGE:
                     // WindowMove(hwnd);
@@ -169,8 +167,8 @@ public class WindowHookManager {
     }
 
     private void RegisterWindow(HWND handle) {
-        if (windows.get(handle) == null && Window.IsAppWindow(handle)) {
-            int id = Window.GetWindowPid(handle);
+        if (windows.get(handle) == null && Window.QueryStatic.IsAppWindow(handle)) {
+            int id = Window.QueryStatic.GetWindowPid(handle);
             logger.info("RegisterWindow, handle = {}, pid = {}", handle, id);
 
             if (id == 0)
@@ -238,7 +236,7 @@ public class WindowHookManager {
         @Override
         public void run() {
             while (true) {
-                HookMessage msg = inputChan.take();
+                HookMessage msg = channelIn.take();
                 if (msg == null) {
                     // Exit
                     return;

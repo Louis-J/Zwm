@@ -14,7 +14,7 @@ import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 import pers.louisj.Zwm.Core.VirtualDeskMan.Monitor;
 import pers.louisj.Zwm.Core.WinApi.WinHelper;
 import pers.louisj.Zwm.Core.Window.Window;
-import pers.louisj.Zwm.Core.Window.WindowAction;
+import pers.louisj.Zwm.Core.Window.WindowStaticAction;
 import com.sun.jna.platform.win32.WinUser;
 
 import pers.louisj.Zwm.Core.Derived.WindowGrid.WindowColumn;
@@ -105,6 +105,14 @@ class WindowGrid {
                 } else
                     u.percentShowTo = realPercentSum;
             }
+        }
+
+        public void ResetLayout() {
+            var percent = 1f / sizeAll;
+            for (var u = begin; u != null; u = u.next) {
+                u.percent = percent;
+            }
+            CalclayoutShow();
         }
     }
 
@@ -427,27 +435,38 @@ class WindowGrid {
     public void ToggleMinimize(WindowColumn wc, WindowUnit wu) {
         if (wu.window.Query.IsMinimized()) {
             sumShow--;
-            if (--wc.sizeShow == 0) {
+            wc.sizeShow--;
+            wc.CalclayoutShow();
+            if (wc.sizeShow == 0) {
                 sizeShow--;
                 CalclayoutShow();
                 layoutState = 2;
                 return;
             }
-            wc.CalclayoutShow();
             layoutState = 1;
             return;
         } else {
             sumShow++;
-            if (++wc.sizeShow == 1) {
+            wc.sizeShow++;
+            wc.CalclayoutShow();
+            if (wc.sizeShow == 1) {
                 sizeShow++;
                 CalclayoutShow();
                 layoutState = 2;
                 return;
             }
-            wc.CalclayoutShow();
             layoutState = 1;
             return;
         }
+    }
+
+    public void ResetLayout() {
+        var percent = 1f / sizeAll;
+        for (var c = begin; c != null; c = c.next) {
+            c.percent = percent;
+            c.ResetLayout();
+        }
+        CalclayoutShow();
     }
 }
 
@@ -570,7 +589,8 @@ public class GridLayoutSimp extends ILayout {
                 rect.y += rect.height;
                 rect.height = (int) (screen.height * (u.percentShowTo - percentShowFrom));
                 percentShowFrom = u.percentShowTo;
-                WindowAction.SetLocation2(u.window, rect);
+                // WindowAction.SetLocation2(u.window, rect);
+                u.window.Action.SetLocation1(rect);
             }
         }
     }
@@ -718,5 +738,10 @@ public class GridLayoutSimp extends ILayout {
                 DoLayoutFull();
                 break;
         }
+    }
+
+    public void ResetLayout() {
+        windowsGrid.ResetLayout();
+        DoLayoutFull();
     }
 }

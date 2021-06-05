@@ -3,22 +3,22 @@ package pers.louisj.Zwm.Core.VirtualDeskMan;
 import java.util.ArrayList;
 
 import com.sun.jna.platform.win32.WinUser.HMONITOR;
-import com.sun.jna.platform.win32.WinUser.MONITORENUMPROC;
 import com.sun.jna.platform.win32.WinUser.MONITORINFOEX;
 
-import com.sun.jna.platform.win32.WinDef.LPARAM;
-import com.sun.jna.platform.win32.WinDef.RECT;
-import com.sun.jna.platform.win32.WinDef.HDC;
+// import com.sun.jna.platform.win32.WinUser.MONITORENUMPROC;
+// import com.sun.jna.platform.win32.WinDef.LPARAM;
+// import com.sun.jna.platform.win32.WinDef.RECT;
+// import com.sun.jna.platform.win32.WinDef.HDC;
 
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
-import pers.louisj.Zwm.Core.VirtualDesk.VirtualDesk;
+// import pers.louisj.Zwm.Core.VirtualDesk.VirtualDesk;
 import pers.louisj.Zwm.Core.WinApi.WinHelper;
 
 public class Monitor {
     private HMONITOR handle;
     private Rectangle aeraAll;
     private Rectangle aeraWorking;
-    private VirtualDesk vd;
+    // private VirtualDesk vd;
 
     public Monitor(HMONITOR handle) {
         this.handle = handle;

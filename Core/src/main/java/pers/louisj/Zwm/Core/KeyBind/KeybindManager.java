@@ -2,6 +2,7 @@ package pers.louisj.Zwm.Core.KeyBind;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Message.Message;
 import pers.louisj.Zwm.Core.Message.VirtualDeskMessage.VirtualDeskEvent;
@@ -10,78 +11,16 @@ import pers.louisj.Zwm.Core.Utils.Channel;
 import pers.louisj.Zwm.Core.WinApi.MyUser32;
 import pers.louisj.Zwm.Core.WinApi.WinHelper;
 
-// import com.sun.jna.platform.win32.COM.;
-import com.sun.jna.platform.win32.User32;
-import com.sun.jna.platform.win32.Kernel32;
-import com.sun.jna.Pointer;
-
-// import java.util.ArrayList;
-import java.util.HashMap;
-
-import com.sun.jna.Native;
-// import com.sun.jna.W32API;
 import com.sun.jna.platform.win32.WinDef.HMODULE;
-// import com.sun.jna.platform.win32;
-
-// import com.sun.jna.platform.win32.WinDef.HINSTANCE;
-// import com.sun.jna.platform.win32.WinDef.LPARAM;
 import com.sun.jna.platform.win32.WinDef.LRESULT;
 import com.sun.jna.platform.win32.WinDef.WPARAM;
-// import com.sun.jna.platform.win32.WinUser.HOOKPROC;
-// import com.sun.jna.platform.win32.Win32VK;
 import com.sun.jna.platform.win32.WinUser.MSLLHOOKSTRUCT;
 import com.sun.jna.platform.win32.WinUser.HHOOK;
 import com.sun.jna.platform.win32.WinUser.KBDLLHOOKSTRUCT;
 import com.sun.jna.platform.win32.WinUser.LowLevelKeyboardProc;
 import com.sun.jna.platform.win32.WinUser.LowLevelMouseProc;
 
-// class Callback {
-// public static MyUser32.HHOOK hHook;
-// public static MyUser32.LowLevelKeyboardProc lpfn;
-// public static volatile boolean quit = false;
-
-// public static void main(String[] args) throws Exception {
-// HMODULE hMod = Kernel32.INSTANCE.GetModuleHandle(null);
-// lpfn = new MyUser32.LowLevelKeyboardProc() {
-// public LRESULT callback(int nCode, WPARAM wParam, MyUser32.KBDLLHOOKSTRUCT
-// lParam) {
-// System.out.println("here");
-// quit = true;
-
-// // var outLParam = new LPARAM(Pointer.nativeValue(lParam.getPointer()));
-// // return WinHelper.MyUser32Inst.CallNextHookEx(hHook, nCode, wParam, outLParam);
-// return WinHelper.MyUser32Inst.CallNextHookEx(hHook, nCode, wParam,
-// lParam.getPointer());
-// }
-// };
-
-// hHook = WinHelper.MyUser32Inst.SetWindowsHookEx(User32.WH_KEYBOARD_LL, lpfn, hMod,
-// 0);
-// if (hHook == null)
-// return;
-// // MyUser32.MSG msg = new MyUser32.MSG();
-// // while (!quit) {
-// // WinHelper.MyUser32Inst.PeekMessage(msg, null, 0, 0, 0);
-// // Thread.sleep(100);
-// // }
-// // if (User32.INSTANCE.UnhookWindowsHookEx(hHook))
-// // System.out.println("Unhooked");
-
-// int result;
-// MyUser32.MSG msg = new MyUser32.MSG();
-// while ((result = WinHelper.MyUser32Inst.GetMessage(msg, null, 0, 0)) != 0) {
-// if (result == -1) {
-// System.err.println("error in GetMessage");
-// break;
-// }
-
-// WinHelper.MyUser32Inst.TranslateMessage(msg);
-// WinHelper.MyUser32Inst.DispatchMessage(msg);
-// }
-
-// WinHelper.MyUser32Inst.UnhookWindowsHookEx(hHook);
-// }
-// }
+import java.util.HashMap;
 
 public class KeybindManager {
     public interface CallBack {
@@ -114,8 +53,8 @@ public class KeybindManager {
     public void Start() {
         logger.info("The KeybindMan Is Registed");
         HMODULE hModule = WinHelper.Kernel32Inst.GetModuleHandle(null);
-        hHookKey = WinHelper.MyUser32Inst.SetWindowsHookEx(User32.WH_KEYBOARD_LL, keyHook, hModule, 0);
-        hHookMouse = WinHelper.MyUser32Inst.SetWindowsHookEx(User32.WH_MOUSE_LL, mouseHook, hModule, 0);
+        hHookKey = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_KEYBOARD_LL, keyHook, hModule, 0);
+        hHookMouse = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_MOUSE_LL, mouseHook, hModule, 0);
     }
 
     public void Defer() {
@@ -289,7 +228,7 @@ public class KeybindManager {
     }
 
     public void DefaultConfig() {
-        Channel<Message> eventChanForVDM = context.vdMan.inputChan;
+        Channel<Message> eventChanForVDM = context.vdMan.channelIn;
 
         Register("Turn Focused Window Left", KeyCode.FuncKey.LALT, KeyCode.VK_LEFT,
                 () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.TurnWindowLeft, null)));
@@ -319,8 +258,7 @@ public class KeybindManager {
                     () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.SwitchToVirtualDesk, obji)));
             Register("Move Focused Window to Virtual Desk " + stri,
                     (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL), (byte) (KeyCode.VK_1 + i),
-                    () -> eventChanForVDM
-                            .put(new VirtualDeskMessage(VirtualDeskEvent.SwitchWindowToVirtualDesk, obji)));
+                    () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.MoveWindowToVirtualDesk, obji)));
         }
 
         Register("Switch Focused Monitor to Previous Virtual Desk",
@@ -333,13 +271,11 @@ public class KeybindManager {
 
         Register("Move Focused Window to Previous Virtual Desk",
                 (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN), KeyCode.VK_LEFT,
-                () -> eventChanForVDM
-                        .put(new VirtualDeskMessage(VirtualDeskEvent.SwitchWindowToPrevVirtualDesk, null)));
+                () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.MoveWindowToPrevVirtualDesk, null)));
 
         Register("Move Focused Window to Next Virtual Desk",
                 (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN), KeyCode.VK_RIGHT,
-                () -> eventChanForVDM
-                        .put(new VirtualDeskMessage(VirtualDeskEvent.SwitchWindowToNextVirtualDesk, null)));
+                () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.MoveWindowToNextVirtualDesk, null)));
 
         Register("Reset Layout of Focused Virtual Desk", KeyCode.FuncKey.LALT, KeyCode.VK_R,
                 () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.ResetLayout, null)));
@@ -347,6 +283,9 @@ public class KeybindManager {
         Register("Toggle Tiling State for Focused Window", KeyCode.FuncKey.LALT, KeyCode.VK_T,
                 () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.ToggleTiling, null)));
 
-        Register("Exit The Program", KeyCode.FuncKey.LALT, KeyCode.VK_ESCAPE, () -> context.Exit());
+        Register("Exit The Program", KeyCode.FuncKey.LALT, KeyCode.VK_Q, () -> context.Exit());
+
+        Register("Debug VD info", KeyCode.FuncKey.LALT, KeyCode.VK_X,
+                () -> eventChanForVDM.put(new VirtualDeskMessage(VirtualDeskEvent.VDDebugInfo, null)));
     }
 }

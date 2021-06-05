@@ -1,13 +1,9 @@
 package pers.louisj.Zwm.Core.WinApi;
 
 import com.sun.jna.platform.win32.Kernel32;
-import com.sun.jna.platform.win32.Kernel32Util;
-import com.sun.jna.platform.win32.User32;
-import com.sun.jna.platform.win32.User32Util;
 import com.sun.jna.platform.win32.Win32Exception;
 
 import com.sun.jna.Native;
-import com.sun.jna.Pointer;
 
 import com.sun.jna.win32.W32APIOptions;
 import com.sun.jna.ptr.IntByReference;

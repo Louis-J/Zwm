@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // import com.google.gson.Gson;
-import com.sun.jna.platform.win32.User32Util.MessageLoopThread;
 import com.sun.jna.platform.win32.WinUser.MSG;
 import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.Win32Exception;
@@ -14,10 +13,9 @@ import pers.louisj.Zwm.Core.Message.Message;
 import pers.louisj.Zwm.Core.Message.MonitorMessage.MonitorMessage;
 import pers.louisj.Zwm.Core.PluginMan.PluginManager;
 import pers.louisj.Zwm.Core.Utils.Channel;
-import pers.louisj.Zwm.Core.VirtualDesk.VirtualDesk;
 import pers.louisj.Zwm.Core.VirtualDeskMan.VirtualDeskFilter;
 import pers.louisj.Zwm.Core.VirtualDeskMan.VirtualDeskManager;
-import pers.louisj.Zwm.Core.VirtualDeskMan.VirtualDeskState;
+// import pers.louisj.Zwm.Core.VirtualDeskMan.VirtualDeskState;
 import pers.louisj.Zwm.Core.WinApi.WinHelper;
 import pers.louisj.Zwm.Core.Window.WindowHookManager;
 
@@ -31,10 +29,10 @@ public class Context {
     public PluginManager pluginMan = new PluginManager();
     public WindowHookManager hookMan = new WindowHookManager();
 
-    private MainLoop mainloop = new MainLoop(vdMan.inputChan);
+    private MainLoop mainloop = new MainLoop(vdMan.channelIn);
 
     public Context() {
-        hookMan.eventChans.add(vdMan.inputChan);
+        hookMan.eventChans.add(vdMan.channelIn);
     }
 
     public void Start() {
@@ -78,35 +76,35 @@ public class Context {
     }
 
     // TODO:
-    private void SaveState() {
-        // var filePath = FileHelper.GetStateFilePath();
-        // var json = JsonConvert.SerializeObject(GetState());
+    // private void SaveState() {
+    //     // var filePath = FileHelper.GetStateFilePath();
+    //     // var json = JsonConvert.SerializeObject(GetState());
 
-        // File.WriteAllText(filePath, json);
-    }
-
-    // TODO:
-    public VirtualDeskState LoadState() {
-        // var filePath = FileHelper.GetStateFilePath();
-
-        // if (!File.Exists(filePath))
-        // {
-        // return null;
-        // }
-        // var json = File.ReadAllText(filePath);
-        // var state = JsonConvert.DeserializeObject<WorkspacerState>(json);
-        // File.Delete(filePath);
-        // return state;
-        return null;
-    }
+    //     // File.WriteAllText(filePath, json);
+    // }
 
     // TODO:
-    private VirtualDeskState GetState() {
-        // return new WorkspacerState() {
-        // WorkspaceState = Workspaces.GetState()
-        // };
-        return null;
-    }
+    // public VirtualDeskState LoadState() {
+    //     // var filePath = FileHelper.GetStateFilePath();
+
+    //     // if (!File.Exists(filePath))
+    //     // {
+    //     // return null;
+    //     // }
+    //     // var json = File.ReadAllText(filePath);
+    //     // var state = JsonConvert.DeserializeObject<WorkspacerState>(json);
+    //     // File.Delete(filePath);
+    //     // return state;
+    //     return null;
+    // }
+
+    // TODO:
+    // private VirtualDeskState GetState() {
+    //     // return new WorkspacerState() {
+    //     // WorkspaceState = Workspaces.GetState()
+    //     // };
+    //     return null;
+    // }
 
     public static class MainLoop extends Thread {
         private volatile int nativeThreadId = 0;

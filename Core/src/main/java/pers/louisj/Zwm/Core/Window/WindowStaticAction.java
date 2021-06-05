@@ -4,13 +4,17 @@ import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 import pers.louisj.Zwm.Core.WinApi.WinHelper;
 import com.sun.jna.Pointer;
 import com.sun.jna.PointerType;
-import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.Win32Exception;
+import com.sun.jna.platform.win32.WinUser;
+import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.platform.win32.WinDef.LPARAM;
+import com.sun.jna.platform.win32.WinDef.WPARAM;
 
-public abstract class WindowAction {
+public abstract class WindowStaticAction {
     private static final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE | WinUser.SWP_NOCOPYBITS
             | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
-    private static final int flagMini = flagNormal | WinUser.SWP_NOMOVE | WinUser.SWP_NOSIZE;
+    // private static final int flagMini = flagNormal | WinUser.SWP_NOMOVE |
+    // WinUser.SWP_NOSIZE;
 
     public static class HDWP4SetLoc extends PointerType {
         HDWP4SetLoc(Pointer p) {
@@ -51,5 +55,28 @@ public abstract class WindowAction {
                 return;
             throw new Win32Exception(errCode);
         }
+    }
+
+    public static HWND GetForegroundWindow() {
+        return WinHelper.MyUser32Inst.GetForegroundWindow();
+    }
+
+    public static void ShowMinimized(HWND handle) {
+        final int SW_SHOWMINIMIZED = 2;
+        final int SW_MINIMIZE = 6;
+
+        if (handle == null || Pointer.nativeValue(handle.getPointer()) == 0)
+            return;
+
+        WinHelper.MyUser32Inst.ShowWindow(handle, SW_MINIMIZE);
+    }
+    public static void SendClose(HWND handle) {
+        final int WM_SYSCOMMAND = 0x0112;
+        final int SC_CLOSE = 0xF060;
+        
+        if (handle == null || Pointer.nativeValue(handle.getPointer()) == 0)
+            return;
+            
+        WinHelper.MyUser32Inst.SendNotifyMessage(handle, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
     }
 }

@@ -5,30 +5,19 @@ import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 import pers.louisj.Zwm.Core.WinApi.DWMApi;
-import pers.louisj.Zwm.Core.WinApi.MyUser32;
 import pers.louisj.Zwm.Core.WinApi.WinHelper;
 
-import com.sun.jna.platform.win32.Kernel32;
-import com.sun.jna.platform.win32.Kernel32Util;
-import com.sun.jna.platform.win32.User32Util;
-
+import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinDef.WPARAM;
 import com.sun.jna.platform.win32.WinDef.LPARAM;
-import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ByteByReference;
 
 import com.sun.jna.platform.win32.WinUser;
-
-import com.sun.jna.Pointer;
-
-// import com.sun.jna.ptr.;
-
 import com.sun.jna.platform.win32.Win32Exception;
-// import com.sun.jna.platform.win32.WinDef.Handle;
 
 public class Window {
     private static Logger logger = LogManager.getLogger("Window");
@@ -40,22 +29,16 @@ public class Window {
     public String windowClass;
     public String windowTitle;
 
-    // private WindowLocation location;
+    public boolean isLayout = true;
+
     private Rectangle rect;
-    private Rectangle offset;
+    private Rectangle rectOff;
     private boolean canLayout;
 
     private byte state;
-    private boolean isLayout = true;
     private boolean isCloaked;
-    private int winStyle;
-    private int winStyleEx;
-
-    public static int GetWindowPid(HWND handle) {
-        IntByReference pProcessId = new IntByReference();
-        WinHelper.MyUser32Inst.GetWindowThreadProcessId(handle, pProcessId);
-        return pProcessId.getValue();
-    }
+    // private int winStyle;
+    // private int winStyleEx;
 
     public ActionImpl Action = new ActionImpl();
     public RefreshImpl Refresh = new RefreshImpl();
@@ -90,9 +73,11 @@ public class Window {
         }
 
         public void ShowMinimized() {
-            final int SW_SHOWMINIMIZED = 2;
+            // final int SW_SHOWMINIMIZED = 2;
+            final int SW_MINIMIZE = 6;
+            
             logger.info("ShowMinimized, {}", this);
-            WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWMINIMIZED);
+            WinHelper.MyUser32Inst.ShowWindow(handle, SW_MINIMIZE);
             Refresh.RefreshState();
         }
 
@@ -118,8 +103,22 @@ public class Window {
             WinHelper.MyUser32Inst.SendNotifyMessage(handle, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
         }
 
-        // TODO:
-        public void SetLocation(Rectangle rect) {
+        public void SetLocation1(Rectangle rect) {
+            if (rectOff == null) {
+                Refresh.RefreshRectangle();
+                Refresh.RefreshOffset();
+            }
+            final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE | WinUser.SWP_NOCOPYBITS
+                    | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
+            // final int flagMini = flagNormal | WinUser.SWP_NOMOVE | WinUser.SWP_NOSIZE;
+
+            if (!WinHelper.MyUser32Inst.SetWindowPos(handle, null, rect.x + rectOff.x, rect.y + rectOff.y,
+                    rect.width + rectOff.width, rect.height + rectOff.height, flagNormal)) {
+                var errCode = WinHelper.Kernel32Inst.GetLastError();
+                if (errCode == 1400) // handle err, means the window closed, so ignore it
+                    return;
+                throw new Win32Exception(errCode);
+            }
         }
     }
 
@@ -150,27 +149,33 @@ public class Window {
                 state |= 4;
         }
 
-        // TODO:
         public void RefreshOffset() {
+            if (Query.IsMinimized())
+                return;
+            // get offset between Window Rect via DwmGetWindowAttribute and Window Rect via
+            // the offset is the size of shadow
+            RECT crect = new RECT();
+            WinHelper.DWMApiInst.DwmGetWindowAttribute(handle, DWMApi.DWMWA_EXTENDED_FRAME_BOUNDS, crect, crect.size());
+            rectOff = new Rectangle(rect.x - crect.left, rect.y - crect.top, rect.width - (crect.right - crect.left),
+                    rect.height - (crect.bottom - crect.top));
         }
 
         public void RefreshCanLayout() {
-            canLayout = (!IsCloaked() && IsAppWindow() && IsAltTabWindow());
+            canLayout = !Query.IsCloaked();
         }
 
-        public void RefreshWindowStyles() {
-            if (WinHelper.Is64Bit) {
-                winStyle = WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_STYLE).intValue();
-                winStyleEx = WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_EXSTYLE).intValue();
-            } else {
-                winStyle = WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_STYLE);
-                winStyleEx = WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_EXSTYLE);
-            }
-        }
-
-        // TODO:
-        public void RefreshIsAppWindow() {
-        }
+        // public void RefreshWindowStyles() {
+        // if (WinHelper.Is64Bit) {
+        // winStyle = WinHelper.MyUser32Inst.GetWindowLongPtr(handle,
+        // WinUser.GWL_STYLE).intValue();
+        // winStyleEx = WinHelper.MyUser32Inst.GetWindowLongPtr(handle,
+        // WinUser.GWL_EXSTYLE).intValue();
+        // } else {
+        // winStyle = WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_STYLE);
+        // winStyleEx = WinHelper.MyUser32Inst.GetWindowLong(handle,
+        // WinUser.GWL_EXSTYLE);
+        // }
+        // }
 
         public void RefreshIsCloaked() {
             ByteByReference refIsCloaked = new ByteByReference();
@@ -183,6 +188,10 @@ public class Window {
     public class QueryImpl {
         public boolean IsFocused() {
             return (state & 0x4) != 0;
+        }
+
+        private boolean IsCloaked() {
+            return isCloaked;
         }
 
         public boolean IsMinimized() {
@@ -199,18 +208,52 @@ public class Window {
     }
 
     public static class QueryStatic {
-        // TODO:
         public static int GetWindowPid(HWND handle) {
-            return 0;
+            IntByReference pProcessId = new IntByReference();
+            WinHelper.MyUser32Inst.GetWindowThreadProcessId(handle, pProcessId);
+            return pProcessId.getValue();
         }
 
-        private static boolean IsAppWindow(HWND handle) {
-            final int WS_EX_NOACTIVATE = 0x08000000;
+        public static boolean IsAppWindow(HWND handle) {
             final int WS_CHILD = 0x40000000;
+            final int WS_EX_NOACTIVATE = 0x08000000;
+            final int WS_EX_TOOLWINDOW = 0x0080;
+            final int WS_EX_APPWINDOW = 0x40000;
+            final int GW_OWNER = 4;
 
+            int styleEx = GetWindowExStyleLongPtr(handle);
+            int style = GetWindowStyleLongPtr(handle);
+            var owner = WinHelper.MyUser32Inst.GetWindow(handle, GW_OWNER);
             return WinHelper.MyUser32Inst.IsWindowVisible(handle)
-                    && (GetWindowExStyleLongPtr(handle) & WS_EX_NOACTIVATE) == 0
-                    && (GetWindowStyleLongPtr(handle) & WS_CHILD) == 0;
+                    && (owner == null || Pointer.nativeValue(owner.getPointer()) == 0)
+                    && (styleEx & WS_EX_NOACTIVATE) == 0 && (style & WS_CHILD) == 0
+                    && ((styleEx & WS_EX_TOOLWINDOW) == 0 || (styleEx & WS_EX_APPWINDOW) != 0);
+            // var b1 = WinHelper.MyUser32Inst.IsWindowVisible(handle);
+            // var b2 = (owner == null || Pointer.nativeValue(owner.getPointer()) == 0);
+            // var b3 = ((styleEx & WS_EX_NOACTIVATE) == 0 && (style & WS_CHILD) == 0);
+            // var b4 = (styleEx & WS_EX_TOOLWINDOW) == 0 || (styleEx & WS_EX_APPWINDOW) !=
+            // 0;
+
+            // int intV = (b1 ? 10000 : 0) + (b2 ? 1000 : 0) + (b3 ? 100 : 0) + (b4 ? 10 :
+            // 0);
+            // logger.info("IsAppWindow static, {}, {}", handle, intV);
+            // return intV == 11110;
+        }
+
+        private static int GetWindowStyleLongPtr(HWND handle) {
+            if (WinHelper.Is64Bit) {
+                return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_STYLE).intValue();
+            } else {
+                return WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_STYLE);
+            }
+        }
+
+        private static int GetWindowExStyleLongPtr(HWND handle) {
+            if (WinHelper.Is64Bit) {
+                return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_EXSTYLE).intValue();
+            } else {
+                return WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_EXSTYLE);
+            }
         }
     }
 
@@ -239,136 +282,21 @@ public class Window {
         }, 128);
 
         Refresh.RefreshTitle();
-        Refresh.RefreshRectangle();
+
         Refresh.RefreshState();
+
+        // Refresh.RefreshWindowStyles();
+
+        Refresh.RefreshRectangle();
+        Refresh.RefreshOffset();
+
+        Refresh.RefreshIsCloaked();
         Refresh.RefreshCanLayout();
-    }
-
-    // public Rectangle GetOffset() {
-    // TODO:
-    // get offset between Window Rect via DwmGetWindowAttribute and Window Rect via
-    // GetWindowRect
-
-    // // Window Rect via GetWindowRect
-    // Win32.Rect rect1 = new Win32.Rect();
-    // Win32.GetWindowRect(_handle, ref rect1);
-
-    // int X1 = rect1.Left;
-    // int Y1 = rect1.Top;
-    // int Width1 = rect1.Right - rect1.Left;
-    // int Height1 = rect1.Bottom - rect1.Top;
-
-    // // Window Rect via DwmGetWindowAttribute
-    // Win32.Rect rect2 = new Win32.Rect();
-    // int size = Marshal.SizeOf(typeof(Win32.Rect));
-    // Win32.DwmGetWindowAttribute(_handle,
-    // (int)Win32.DwmWindowAttribute.DWMWA_EXTENDED_FRAME_BOUNDS, out rect2, size);
-
-    // int X2 = rect2.Left;
-    // int Y2 = rect2.Top;
-    // int Width2 = rect2.Right - rect2.Left;
-    // int Height2 = rect2.Bottom - rect2.Top;
-
-    // // Calculate offset
-    // int X = X1 - X2;
-    // int Y = Y1 - Y2;
-    // int Width = Width1 - Width2;
-    // int Height = Height1 - Height2;
-
-    // return new Rectangle(X, Y, Width, Height);
-    // return null;
-    // }
-
-    public boolean IsLayout() {
-        return isLayout;
-    }
-
-    public void BringToTop() {
-        WinHelper.MyUser32Inst.BringWindowToTop(handle);
     }
 
     @Override
     public String toString() {
         return handle.toString() + '|' + windowTitle + '|' + windowClass + '|' + processName;
-    }
-
-    public static boolean IsAppWindow(HWND handle) {
-        final int WS_EX_NOACTIVATE = 0x08000000;
-        final int WS_CHILD = 0x40000000;
-
-        return WinHelper.MyUser32Inst.IsWindowVisible(handle)
-                && (GetWindowExStyleLongPtr(handle) & WS_EX_NOACTIVATE) == 0
-                && (GetWindowStyleLongPtr(handle) & WS_CHILD) == 0;
-    }
-
-    // privates
-
-    private boolean IsCloaked() {
-        ByteByReference isCloaked = new ByteByReference();
-        WinHelper.DWMApiInst.DwmGetWindowAttribute(handle, DWMApi.DWMWA_CLOAK, isCloaked, 1);
-        return (isCloaked.getValue() != (byte) 0);
-    }
-
-    private static int GetWindowStyleLongPtr(HWND handle) {
-        if (WinHelper.Is64Bit) {
-            return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_STYLE).intValue();
-        } else {
-            return WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_STYLE);
-        }
-    }
-
-    private static int GetWindowExStyleLongPtr(HWND handle) {
-        if (WinHelper.Is64Bit) {
-            return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_EXSTYLE).intValue();
-        } else {
-            return WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_EXSTYLE);
-        }
-    }
-
-    private boolean IsAppWindow() {
-        final int WS_EX_NOACTIVATE = 0x08000000;
-        final int WS_CHILD = 0x40000000;
-
-        return WinHelper.MyUser32Inst.IsWindowVisible(handle)
-                && (GetWindowExStyleLongPtr(handle) & WS_EX_NOACTIVATE) == 0
-                && (GetWindowStyleLongPtr(handle) & WS_CHILD) == 0;
-    }
-
-    private boolean IsAltTabWindow() {
-        final int WS_EX_TOOLWINDOW = 0x0080;
-        final int WS_EX_APPWINDOW = 0x40000;
-        final int GW_OWNER = 4;
-
-        int exStyle = GetWindowExStyleLongPtr(handle);
-        if ((exStyle & WS_EX_TOOLWINDOW) != 0)
-            return false;
-
-        var h = WinHelper.MyUser32Inst.GetWindow(handle, GW_OWNER);
-        if (h != null && Pointer.nativeValue(h.getPointer()) != 0)
-            return false;
-
-        if ((exStyle & WS_EX_APPWINDOW) != 0)
-            return true;
-
-        return true;
-        // I am leaving this code here for testing purposes, but I don't think I need
-        // it.
-        // the old-school alt-tab implementation clearly doesn't 100% line up with the
-        // aforementioned
-        // blog post, or the below implementation in C# is wrong, because some windows
-        // are hidden when
-        // popups are created. For my purposes, I want to layout them anyway, so always
-        // return true;
-        /*
-         * // Start at the root owner var hWndTry = Win32.GetAncestor(hWnd,
-         * Win32.GA.GA_ROOTOWNER); IntPtr oldHWnd;
-         * 
-         * // See if we are the last active visible popup do { oldHWnd = hWndTry;
-         * hWndTry = Win32.GetLastActivePopup(hWndTry); } while (oldHWnd != hWndTry &&
-         * !Win32.IsWindowVisible(hWndTry));
-         * 
-         * return hWndTry == hWnd;
-         */
     }
 
     // the handle is the only const val there, other should be mutable

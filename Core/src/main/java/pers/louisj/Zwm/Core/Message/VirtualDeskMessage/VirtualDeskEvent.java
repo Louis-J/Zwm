@@ -4,10 +4,11 @@ import pers.louisj.Zwm.Core.Message.Message;
 import pers.louisj.Zwm.Core.Window.Window;
 
 public enum VirtualDeskEvent {
-    SwitchToNextVirtualDesk,
-    SwitchToVirtualDesk,
+    SwitchToNextVirtualDesk, SwitchToVirtualDesk,
 
     VirtualDeskUpdated,
 
-    CloseFocusedWindow, ResetLayout, TurnWindowLeft, TurnWindowRight, TurnWindowUp, TurnWindowDown, SwitchWindowToVirtualDesk, SwitchToPrevVirtualDesk, SwitchWindowToPrevVirtualDesk, SwitchWindowToNextVirtualDesk, ToggleTiling, FocusedWindowClose, FocusedWindowMinimize, FocusedWindowMaximize,
+    ResetLayout, TurnWindowLeft, TurnWindowRight, TurnWindowUp, TurnWindowDown, MoveWindowToVirtualDesk,
+    SwitchToPrevVirtualDesk, MoveWindowToPrevVirtualDesk, MoveWindowToNextVirtualDesk, ToggleTiling, FocusedWindowClose,
+    FocusedWindowMinimize, FocusedWindowMaximize, VDDebugInfo;
 }

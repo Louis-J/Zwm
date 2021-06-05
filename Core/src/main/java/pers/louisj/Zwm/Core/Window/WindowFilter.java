@@ -1,15 +1,12 @@
 package pers.louisj.Zwm.Core.Window;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
-import pers.louisj.Zwm.Core.Window.Window;
 
 public abstract class WindowFilter {
     public interface FilterCallBack {
