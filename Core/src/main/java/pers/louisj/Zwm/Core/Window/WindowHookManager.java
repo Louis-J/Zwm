@@ -27,7 +27,7 @@ import pers.louisj.Zwm.Core.Message.WindowMessage.WindowEvent;
 import pers.louisj.Zwm.Core.Message.WindowMessage.WindowMessage;
 import pers.louisj.Zwm.Core.Utils.Channel;
 import pers.louisj.Zwm.Core.Utils.Channel2;
-import pers.louisj.Zwm.Core.WinApi.WinHelper;
+import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 public class WindowHookManager {
     private class HookMessage {

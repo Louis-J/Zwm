@@ -11,8 +11,8 @@ import java.util.Set;
 
 import pers.louisj.Zwm.Core.Utils.Types.Point;
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
+import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 import pers.louisj.Zwm.Core.VirtualDeskMan.Monitor;
-import pers.louisj.Zwm.Core.WinApi.WinHelper;
 import pers.louisj.Zwm.Core.Window.Window;
 import pers.louisj.Zwm.Core.Window.WindowStaticAction;
 import com.sun.jna.platform.win32.WinUser;

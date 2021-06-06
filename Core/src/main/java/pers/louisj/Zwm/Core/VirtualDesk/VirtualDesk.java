@@ -121,8 +121,10 @@ public class VirtualDesk {
         // if (layoutWindows.contains(window))
         // DoLayout();
         // }
-        window.Refresh.RefreshState();
-        layout.ToggleMinimize(window);
+        if (layout != null) {
+            window.Refresh.RefreshState();
+            layout.ToggleMinimize(window);
+        }
     }
 
     public void ResetLayout() {

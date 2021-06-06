@@ -26,6 +26,7 @@ import pers.louisj.Zwm.Core.Utils.ChannelList;
 import pers.louisj.Zwm.Core.VirtualDesk.VirtualDesk;
 import pers.louisj.Zwm.Core.VirtualDesk.VirtualDeskRouter;
 import pers.louisj.Zwm.Core.Window.Window;
+import pers.louisj.Zwm.Core.Window.WindowStaticAction;
 import pers.louisj.Zwm.Core.Window.WindowUpdateType;
 
 public class VirtualDeskManager {
@@ -260,9 +261,6 @@ public class VirtualDeskManager {
 
     // TODO:
     class DisplayImpl {
-        public void UpdateWindow(Window window, WindowEvent event) {
-        }
-
         public void SwitchToVD(int index) {
             logger.info("SwitchToVD, {}", index);
             if (virtualDesks.size() > index && focusedIndex != index) {
@@ -415,9 +413,31 @@ public class VirtualDeskManager {
                             break;
                         }
                         case FocusedWindowMinimize: {
-                            var lastFocused = virtualDesks.get(focusedIndex).lastFocused;
-                            if (lastFocused != null)
-                                lastFocused.Action.ShowMinimized();
+                            switch (3) {
+                                case 1: {
+                                    var lastFocused = virtualDesks.get(focusedIndex).lastFocused;
+                                    if (lastFocused != null)
+                                        lastFocused.Action.ShowMinimized();
+                                    break;
+                                }
+                                case 2: {
+                                    var lastFocused = virtualDesks.get(focusedIndex).lastFocused;
+                                    if (lastFocused != null)
+                                        WindowStaticAction.ShowMinimized(lastFocused.hwnd);
+                                    break;
+                                }
+                                case 3: {
+                                    com.sun.jna.platform.win32.WinDef.HWND handleMe = null;
+                                    var lastFocused = virtualDesks.get(focusedIndex).lastFocused;
+                                    if (lastFocused != null)
+                                        handleMe = lastFocused.hwnd;
+                                    var handleG = WindowStaticAction.GetForegroundWindow();
+                                    logger.info("FocusedWindowMinimize, {}\n\t{}\n\t{}", handleMe == handleG, handleMe,
+                                            handleG);
+                                    WindowStaticAction.ShowMinimized(handleG);
+                                    break;
+                                }
+                            }
                             break;
                         }
                         case TurnWindowLeft: {
@@ -470,7 +490,7 @@ public class VirtualDeskManager {
                                         "Begin: " + vd.GetName() + ", size = " + String.valueOf(vd.allWindows.size()));
                                 System.out.println("AllWindows: " + String.valueOf(vd.allWindows.size()));
                                 for (var w : vd.allWindows) {
-                                    System.out.println("handle: " + w.handle);
+                                    System.out.println("handle: " + w.hwnd);
                                     System.out.println("pid: " + w.processId);
                                     System.out.println("name: " + w.processName);
                                     System.out.println("class: " + w.windowClass);

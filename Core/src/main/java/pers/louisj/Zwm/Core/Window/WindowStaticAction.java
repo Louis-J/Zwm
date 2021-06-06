@@ -1,7 +1,8 @@
 package pers.louisj.Zwm.Core.Window;
 
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
-import pers.louisj.Zwm.Core.WinApi.WinHelper;
+import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
+
 import com.sun.jna.Pointer;
 import com.sun.jna.PointerType;
 import com.sun.jna.platform.win32.Win32Exception;
@@ -31,7 +32,7 @@ public abstract class WindowStaticAction {
             // int Y = location.Y + offset.Y;
             // int Width = location.Width + offset.Width;
             // int Height = location.Height + offset.Height;
-            var ret = WinHelper.MyUser32Inst.DeferWindowPos(getPointer(), window.handle, null, location.x, location.y,
+            var ret = WinHelper.MyUser32Inst.DeferWindowPos(getPointer(), window.hwnd, null, location.x, location.y,
                     location.width, location.height, flagNormal);
             if (ret == null || Pointer.nativeValue(ret) == 0) {
                 var errCode = WinHelper.Kernel32Inst.GetLastError();
@@ -48,7 +49,7 @@ public abstract class WindowStaticAction {
     }
 
     public static void SetLocation2(Window window, Rectangle location) {
-        if (!WinHelper.MyUser32Inst.SetWindowPos(window.handle, null, location.x, location.y, location.width,
+        if (!WinHelper.MyUser32Inst.SetWindowPos(window.hwnd, null, location.x, location.y, location.width,
                 location.height, flagNormal)) {
             var errCode = WinHelper.Kernel32Inst.GetLastError();
             if (errCode == 1400) // handle err, means the window closed, so ignore it
@@ -62,21 +63,23 @@ public abstract class WindowStaticAction {
     }
 
     public static void ShowMinimized(HWND handle) {
-        final int SW_SHOWMINIMIZED = 2;
-        final int SW_MINIMIZE = 6;
+        // ShowWindow will NOT activate the next window!
+        // SO ues PostMessage!
+        final int WM_SYSCOMMAND = 0x0112;
+        final int SC_MINIMIZE = 0xF020;
 
         if (handle == null || Pointer.nativeValue(handle.getPointer()) == 0)
             return;
-
-        WinHelper.MyUser32Inst.ShowWindow(handle, SW_MINIMIZE);
+        WinHelper.MyUser32Inst.PostMessage(handle, WM_SYSCOMMAND, new WPARAM(SC_MINIMIZE), null);
     }
+
     public static void SendClose(HWND handle) {
         final int WM_SYSCOMMAND = 0x0112;
         final int SC_CLOSE = 0xF060;
-        
+
         if (handle == null || Pointer.nativeValue(handle.getPointer()) == 0)
             return;
-            
+
         WinHelper.MyUser32Inst.SendNotifyMessage(handle, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
     }
 }

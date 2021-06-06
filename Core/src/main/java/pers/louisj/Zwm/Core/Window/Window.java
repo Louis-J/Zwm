@@ -4,8 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
-import pers.louisj.Zwm.Core.WinApi.DWMApi;
-import pers.louisj.Zwm.Core.WinApi.WinHelper;
+import pers.louisj.Zwm.Core.Utils.WinApi.DWMApi;
+import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinDef;
@@ -22,7 +22,7 @@ import com.sun.jna.platform.win32.Win32Exception;
 public class Window {
     private static Logger logger = LogManager.getLogger("Window");
 
-    public HWND handle;
+    public HWND hwnd;
     public int processId;
 
     public String processName;
@@ -47,38 +47,38 @@ public class Window {
     public class ActionImpl {
         public void Focus() {
             logger.info("Focus, {}", this);
-            WinHelper.MyUser32Inst.SetForegroundWindow(handle);
+            WinHelper.MyUser32Inst.SetForegroundWindow(hwnd);
             Refresh.RefreshState();
         }
 
         public void Hide() {
             final int SW_HIDE = 0;
             logger.info("Hide, {}", this);
-            WinHelper.MyUser32Inst.ShowWindow(handle, SW_HIDE);
+            WinHelper.MyUser32Inst.ShowWindow(hwnd, SW_HIDE);
             Refresh.RefreshState();
         }
 
         public void ShowNormal() {
             final int SW_SHOWNOACTIVATE = 4;
             logger.info("ShowNormal, {}", this);
-            WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWNOACTIVATE);
+            WinHelper.MyUser32Inst.ShowWindow(hwnd, SW_SHOWNOACTIVATE);
             Refresh.RefreshState();
         }
 
         public void ShowMaximized() {
             final int SW_SHOWMAXIMIZED = 3;
             logger.info("ShowMaximized, {}", this);
-            WinHelper.MyUser32Inst.ShowWindow(handle, SW_SHOWMAXIMIZED);
+            WinHelper.MyUser32Inst.ShowWindow(hwnd, SW_SHOWMAXIMIZED);
             Refresh.RefreshState();
         }
 
         public void ShowMinimized() {
             // final int SW_SHOWMINIMIZED = 2;
             final int SW_MINIMIZE = 6;
-            
+
             logger.info("ShowMinimized, {}", this);
-            WinHelper.MyUser32Inst.ShowWindow(handle, SW_MINIMIZE);
-            Refresh.RefreshState();
+            WinHelper.MyUser32Inst.ShowWindow(hwnd, SW_MINIMIZE);
+            // Refresh.RefreshState();
         }
 
         public void ShowInCurrentState() {
@@ -93,14 +93,14 @@ public class Window {
 
         public void BringToTop() {
             logger.info("BringToTop, {}", this);
-            WinHelper.MyUser32Inst.BringWindowToTop(handle);
+            WinHelper.MyUser32Inst.BringWindowToTop(hwnd);
         }
 
         public void SendClose() {
             final int WM_SYSCOMMAND = 0x0112;
             final int SC_CLOSE = 0xF060;
             logger.info("SendClose, {}", this);
-            WinHelper.MyUser32Inst.SendNotifyMessage(handle, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
+            WinHelper.MyUser32Inst.SendNotifyMessage(hwnd, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
         }
 
         public void SetLocation1(Rectangle rect) {
@@ -112,7 +112,7 @@ public class Window {
                     | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
             // final int flagMini = flagNormal | WinUser.SWP_NOMOVE | WinUser.SWP_NOSIZE;
 
-            if (!WinHelper.MyUser32Inst.SetWindowPos(handle, null, rect.x + rectOff.x, rect.y + rectOff.y,
+            if (!WinHelper.MyUser32Inst.SetWindowPos(hwnd, null, rect.x + rectOff.x, rect.y + rectOff.y,
                     rect.width + rectOff.width, rect.height + rectOff.height, flagNormal)) {
                 var errCode = WinHelper.Kernel32Inst.GetLastError();
                 if (errCode == 1400) // handle err, means the window closed, so ignore it
@@ -127,25 +127,25 @@ public class Window {
             windowTitle = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
                 @Override
                 public int Invoke(char[] buffer, int size) {
-                    return WinHelper.MyUser32Inst.GetWindowText(handle, buffer, size);
+                    return WinHelper.MyUser32Inst.GetWindowText(hwnd, buffer, size);
                 }
             }, 128);
         }
 
         public void RefreshRectangle() {
             RECT crect = new RECT();
-            WinHelper.MyUser32Inst.GetWindowRect(handle, crect);
+            WinHelper.MyUser32Inst.GetWindowRect(hwnd, crect);
             rect = new Rectangle(crect.left, crect.top, crect.right - crect.left, crect.bottom - crect.top);
         }
 
         public void RefreshState() {
-            if (WinHelper.MyUser32Inst.IsIconic(handle))
+            if (WinHelper.MyUser32Inst.IsIconic(hwnd))
                 state = 1;
-            else if (WinHelper.MyUser32Inst.IsZoomed(handle))
+            else if (WinHelper.MyUser32Inst.IsZoomed(hwnd))
                 state = 2;
             else
                 state = 0;
-            if (WinHelper.MyUser32Inst.GetForegroundWindow() == handle)
+            if (WinHelper.MyUser32Inst.GetForegroundWindow() == hwnd)
                 state |= 4;
         }
 
@@ -155,7 +155,7 @@ public class Window {
             // get offset between Window Rect via DwmGetWindowAttribute and Window Rect via
             // the offset is the size of shadow
             RECT crect = new RECT();
-            WinHelper.DWMApiInst.DwmGetWindowAttribute(handle, DWMApi.DWMWA_EXTENDED_FRAME_BOUNDS, crect, crect.size());
+            WinHelper.DWMApiInst.DwmGetWindowAttribute(hwnd, DWMApi.DWMWA_EXTENDED_FRAME_BOUNDS, crect, crect.size());
             rectOff = new Rectangle(rect.x - crect.left, rect.y - crect.top, rect.width - (crect.right - crect.left),
                     rect.height - (crect.bottom - crect.top));
         }
@@ -179,7 +179,7 @@ public class Window {
 
         public void RefreshIsCloaked() {
             ByteByReference refIsCloaked = new ByteByReference();
-            WinHelper.DWMApiInst.DwmGetWindowAttribute(handle, DWMApi.DWMWA_CLOAK, refIsCloaked, 1);
+            WinHelper.DWMApiInst.DwmGetWindowAttribute(hwnd, DWMApi.DWMWA_CLOAK, refIsCloaked, 1);
             isCloaked = (refIsCloaked.getValue() != (byte) 0);
         }
     }
@@ -259,7 +259,7 @@ public class Window {
 
     public Window(HWND handle, int processId) {
         logger.info("Window, handle = {}", handle);
-        this.handle = handle;
+        this.hwnd = handle;
         this.processId = processId;
 
         logger.info("Window, processId = {}", processId);
@@ -296,12 +296,12 @@ public class Window {
 
     @Override
     public String toString() {
-        return handle.toString() + '|' + windowTitle + '|' + windowClass + '|' + processName;
+        return hwnd.toString() + '|' + windowTitle + '|' + windowClass + '|' + processName;
     }
 
     // the handle is the only const val there, other should be mutable
     @Override
     public int hashCode() {
-        return handle.hashCode();
+        return hwnd.hashCode();
     }
 }

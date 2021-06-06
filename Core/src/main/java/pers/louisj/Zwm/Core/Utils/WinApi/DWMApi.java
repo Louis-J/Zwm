@@ -1,4 +1,4 @@
-package pers.louisj.Zwm.Core.WinApi;
+package pers.louisj.Zwm.Core.Utils.WinApi;
 
 import com.sun.jna.Library;
 import com.sun.jna.PointerType;

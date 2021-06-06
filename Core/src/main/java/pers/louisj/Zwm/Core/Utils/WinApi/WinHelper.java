@@ -1,4 +1,4 @@
-package pers.louisj.Zwm.Core.WinApi;
+package pers.louisj.Zwm.Core.Utils.WinApi;
 
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.Win32Exception;

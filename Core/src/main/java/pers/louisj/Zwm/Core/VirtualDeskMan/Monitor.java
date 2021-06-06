@@ -11,8 +11,7 @@ import com.sun.jna.platform.win32.WinUser.MONITORINFOEX;
 // import com.sun.jna.platform.win32.WinDef.HDC;
 
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
-// import pers.louisj.Zwm.Core.VirtualDesk.VirtualDesk;
-import pers.louisj.Zwm.Core.WinApi.WinHelper;
+import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 public class Monitor {
     private HMONITOR handle;

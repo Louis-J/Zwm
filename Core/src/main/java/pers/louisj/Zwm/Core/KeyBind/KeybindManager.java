@@ -8,8 +8,8 @@ import pers.louisj.Zwm.Core.Message.Message;
 import pers.louisj.Zwm.Core.Message.VirtualDeskMessage.VirtualDeskEvent;
 import pers.louisj.Zwm.Core.Message.VirtualDeskMessage.VirtualDeskMessage;
 import pers.louisj.Zwm.Core.Utils.Channel;
-import pers.louisj.Zwm.Core.WinApi.MyUser32;
-import pers.louisj.Zwm.Core.WinApi.WinHelper;
+import pers.louisj.Zwm.Core.Utils.WinApi.MyUser32;
+import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 import com.sun.jna.platform.win32.WinDef.HMODULE;
 import com.sun.jna.platform.win32.WinDef.LRESULT;
