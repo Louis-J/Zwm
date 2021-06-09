@@ -1,16 +1,53 @@
-# Zwm
-a tiling window manager for windows os
+<div align=center>
+<img src="icon/ZWMICO.png" width="30%" height="30%"/>
+</div>
 
-# Using: 
+# <center>Zwm</center>
+### An **Auto-Tiling** Window Manager for Windows OS
+
+
+
+
+# Feature
++ [x] Virtual Desktop in Windows OS(use it not only in win 10)
+  + [ ] Multiple Monitor support
+
++ [x] Auto-Tiling!
+  + [x] A Basic Grid Layout
+  + [ ] Float mode
+  + [ ] More Layouts...
+
++ [ ] Plug-in support
+  + [x] SystemTray Plug-in
+  + [ ] Smart Gap
+  + [ ] i3-like Bar
+  + [ ] More Plug-in...
+
++ [ ] Very easy to use and customize
+  + [ ] Change your setting in config.java
+  + [ ] Or change the world in config.java(layouts, keybinds, ...)
+
+# TODO
++ float mode
++ multi-monitor support
++ an i3-like Bar
++ solve bugs in current grid layout
++ solve bugs in current systemtray plug-in
++ package a simple jre environment
++ release the first version
+
+# Thanks to: 
 https://github.com/sonicmouse/ProcCmdLine
-implementation group: 'com.vnetpublishing.java', name: 'super-user-application', version: '0.0.5'
 
-# ShortCuts
+
+# Why do you use java?
+I'm a c++ boy and it's slow and a little boring to struggle with bugs in c++. I also want to try and study a new language.
+
+# Default ShortCuts
 
 "Exit The Program", LALT, Q
 
 "Debug VD info", LALT, X
-
 
 "Turn Focused Window Left", LALT, LEFT, 
 
