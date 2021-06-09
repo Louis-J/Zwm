@@ -9,17 +9,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Context;
-import pers.louisj.Zwm.Core.Message.MonitorMessage.MonitorMessage;
-import pers.louisj.Zwm.Core.Message.VirtualDeskMessage.VirtualDeskEvent;
-import pers.louisj.Zwm.Core.Message.VirtualDeskMessage.VirtualDeskMessage;
+import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
+import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
+import pers.louisj.Zwm.Core.L2.Window.WindowStaticAction;
 
-import org.louisj.Zwm.SysTray.MenuItem;
-import org.louisj.Zwm.SysTray.SysTray;
-import org.louisj.Zwm.SysTray.SysTrayDll;
-// import pers.louisj.Zwm.Core.Context;
-
-import com.sun.jna.Memory;
-import com.sun.jna.Pointer;
+// import org.louisj.Zwm.SysTray.MenuItem;
+// import org.louisj.Zwm.SysTray.SysTray;
+// import org.louisj.Zwm.SysTray.SysTrayDll;
 
 public class Launcher {
     private static Logger logger;
@@ -27,6 +23,7 @@ public class Launcher {
     static {
         System.setProperty("Time4File", String.valueOf(new Date().getTime()));
         logger = LogManager.getLogger("Main");
+        WindowStaticAction.glogger = logger;
     }
 
     public static void main(String[] args) {
@@ -39,7 +36,8 @@ public class Launcher {
         // Context context = ConfigHelper.Config();
         // if(context == null)
         // context = new Context();
-        SysTray.Init();
+
+        // SysTray.Init();
 
         Context context;
         context = new Context();
@@ -50,7 +48,7 @@ public class Launcher {
         context.vdMan.ActionVD.VDCreate("3", null, null);
         context.vdMan.ActionVD.VDCreate("4", null, null);
 
-        context.vdFilter.Build();
+        context.vdMan.filterIgnore.Build();
 
         // // init windowhook
         context.hookMan.Init();
@@ -62,7 +60,7 @@ public class Launcher {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        context.vdMan.channelIn.put(new MonitorMessage());
+        context.mainloop.channelIn.put(new VDManMessage(VDManEvent.RefreshMonitors, null));
         // // load state after restart
         // var state = context.LoadState();
         // if (state != null) {
@@ -162,7 +160,7 @@ public class Launcher {
         logger.info("Run message loop in Main");
         context.Start();
         // logger.info("Main Func Run 1");
-        SysTray.Quit();
+        // SysTray.Quit();
         // logger.info("Main Func Run 2");
         context.Defer();
         logger.info("Main Func Run Over");
