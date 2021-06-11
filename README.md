@@ -2,7 +2,7 @@
 <img src="icon/ZWMICO.png" width="30%" height="30%"/>
 </div>
 
-# <center>Zwm</center>
+# <div align=center>Zwm</div>
 ### An **Auto-Tiling** Window Manager for Windows OS
 
 
