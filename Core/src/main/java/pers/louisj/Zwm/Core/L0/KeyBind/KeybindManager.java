@@ -67,6 +67,10 @@ public class KeybindManager {
             WinHelper.MyUser32Inst.UnhookWindowsHookEx(hHookMouse);
     }
 
+    public void Register(String name, int funcKey, int key, CallBack callback) {
+        Register(name, (byte) funcKey, (byte) key, callback);
+    }
+
     public void Register(String name, byte funcKey, byte key, CallBack callback) {
         short realkeys = (short) ((short) 256 * funcKey + key);
         if (keybinds.containsKey(realkeys)) {

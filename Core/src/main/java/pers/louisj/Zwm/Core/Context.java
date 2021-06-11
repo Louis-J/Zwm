@@ -49,7 +49,7 @@ public class Context {
     }
 
     public void DefaultConfig() {
-        keyBindMan.DefaultConfig();
+        // keyBindMan.DefaultConfig();
         vdMan.filterIgnore.DefaultConfig();
 
         // SystemTray.AddToContextMenu("enable/disable workspacer", () => Enabled =

@@ -8,5 +8,4 @@ public enum WindowEvent {
     Foreground, 
     MoveStart, MoveEnd, Move,
     TitleChange,
-    LocChange,
 }

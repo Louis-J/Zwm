@@ -5,10 +5,10 @@ import java.util.HashSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import pers.louisj.Zwm.Core.Derived.GridLayout;
 import pers.louisj.Zwm.Core.Derived.ILayout;
 import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
 import pers.louisj.Zwm.Core.Global.Message.WindowMessage.WindowEvent;
+import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.GridLayout;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.Monitor;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouter;
 import pers.louisj.Zwm.Core.L2.Window.Window;
@@ -76,8 +76,8 @@ public class VirtualDesk {
         this.name = name;
         this.router = router;
         // this.layout = new GridLayout(3, (float) 0.05, false);
-        this.layout = new GridLayout();
-        // this.layout = null;
+        // this.layout = new GridLayout();
+        this.layout = layout;
     }
 
     public String GetName() {
@@ -331,7 +331,6 @@ public class VirtualDesk {
             // TODO:
             case ToggleTiling:
             case DisplayInMonitor:
-            case MaxmizeFeature:
             default:
                 break;
         }

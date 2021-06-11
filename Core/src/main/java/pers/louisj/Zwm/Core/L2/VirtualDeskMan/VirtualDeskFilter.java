@@ -26,6 +26,7 @@ public class VirtualDeskFilter extends WindowFilter {
         MatchClass("TaskListThumbnailWnd"); // TaskList in Task Bar
         MatchClass("SysShadow"); // Some Shadow Window
         MatchClass("VirtualConsoleClass"); // Conemu
+        MatchClass("OperationStatusWindow"); // explorer "file is in using" window
         
 
         MatchClass("7ttRefreshSyncWnd"); // App: 7+ taskbar tweaker

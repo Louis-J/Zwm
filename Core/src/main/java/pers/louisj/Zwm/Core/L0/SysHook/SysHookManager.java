@@ -60,7 +60,6 @@ public class SysHookManager {
 
     private static final int EVENT_SYSTEM_FOREGROUND = 0x0003;
 
-    private static final int EVENT_OBJECT_LOCATIONCHANGE = 0x800B; // Only For Maximize
     private static final int EVENT_OBJECT_NAMECHANGE = 0x800C;
 
     // private static final int WH_MOUSE_LL = 14;
@@ -92,8 +91,6 @@ public class SysHookManager {
         hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MOVESIZEEND, EVENT_SYSTEM_MOVESIZEEND,
                 new HMODULE(), windowHook, 0, 0, 0));
         hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
-                new HMODULE(), windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE,
                 new HMODULE(), windowHook, 0, 0, 0));
 
         // hookexs.add(WinHelper.MyUser32Inst.SetWindowsHookEx(WH_MOUSE_LL, mouseHook,
@@ -158,15 +155,11 @@ public class SysHookManager {
                     case EVENT_SYSTEM_MOVESIZEEND:
                         channelIn.put(new HookMessage(hwnd, WindowEvent.MoveEnd));
                         break;
-                    case EVENT_OBJECT_LOCATIONCHANGE:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.LocChange));
-                        break;
                     case EVENT_OBJECT_NAMECHANGE:
                         channelIn.put(new HookMessage(hwnd, WindowEvent.TitleChange));
                         break;
                 }
             }
-
         }
     };
 
@@ -209,6 +202,7 @@ public class SysHookManager {
     private void UpdateWindow(HWND hwnd, WindowEvent updateType) {
         var window = windows.get(hwnd);
         if (window != null) {
+            logger.info("UpdateWindow, window = {}, updateType = {}", window, updateType);
             for (var e : eventChans) {
                 e.put(new WindowMessage(updateType, window));
             }
@@ -233,20 +227,6 @@ public class SysHookManager {
         if (window != null) {
             for (var e : eventChans) {
                 e.put(new VDMessage(VDEvent.WindowUpdateLocation, window));
-            }
-        }
-    }
-
-    private void WindowLocChange(HWND hwnd) {
-        var window = windows.get(hwnd);
-        if (window != null) {
-            logger.info("WindowLocChange, {}", window);
-            var ori = window.Query.IsMaximized();
-            window.Refresh.RefreshState();
-            if (window.Query.IsMaximized() != ori) {
-                for (var e : eventChans) {
-                    e.put(new VDMessage(VDEvent.MaxmizeFeature, window));
-                }
             }
         }
     }
@@ -294,9 +274,6 @@ public class SysHookManager {
                     case MinimizeStart:
                     case MinimizeEnd:
                         WindowToggleMinimize(msg.hwnd);
-                        break;
-                    case LocChange:
-                        WindowLocChange(msg.hwnd);
                         break;
                     case Show:
                     case Hide:

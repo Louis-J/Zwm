@@ -1,4 +1,4 @@
-package pers.louisj.Zwm.Core.Derived;
+package pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,8 +14,10 @@ import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 import com.sun.jna.platform.win32.WinUser;
+import com.sun.jna.platform.win32.WinDef.POINT;
 
-import pers.louisj.Zwm.Core.Derived.WindowGrid.WindowColumn;
+import pers.louisj.Zwm.Core.Derived.ILayout;
+import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.WindowGrid.WindowColumn;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.Monitor;
 import pers.louisj.Zwm.Core.L2.Window.Window;
 import pers.louisj.Zwm.Core.L2.Window.WindowStaticAction;
@@ -473,12 +475,6 @@ class WindowGrid {
     public GridPosi ChangeLoc(WindowColumn wc, WindowUnit wu, float xf, float yf) {
         var rect = wu.window.Query.GetRect();
         var c = begin;
-        // for (;; c = c.next) {
-        // if (c == null)
-        // throw new Error("ChangeLoc, c == null, xf = " + xf + ", yf = " + yf);
-        // if (c.percentShowTo >= xf)
-        // break;
-        // }
         for (; c.percentShowTo < xf; c = c.next) {
         }
         var r = c.begin;
@@ -766,12 +762,24 @@ public class GridLayout implements ILayout {
         }
     }
 
-    // TODO:
+    // Use The Average of Mouse Loc and Window Center Loc
     public void ChangeLoc(Window window, GridPosi gridPosi) {
         logger.info("ChangeLoc, {}", window);
-        var p = window.Query.GetRect().Center();
+        Point p1 = window.Query.GetRect().Center();
+        // WinApi.GetCursorPos(out point);
+        POINT p2p = new POINT();
+        WinHelper.MyUser32Inst.GetCursorPos(p2p);
+        Point p = new Point((p1.x + p2p.x) / 2, (p1.y + p2p.y) / 2);
         float xf = (float) (p.x - screen.x) / screen.width;
         float yf = (float) (p.y - screen.y) / screen.height;
+        if (xf < 0)
+            xf = 0;
+        else if (xf > 1)
+            xf = 1;
+        if (yf < 0)
+            yf = 0;
+        else if (yf > 1)
+            yf = 1;
         var swapPosi = windowsGrid.ChangeLoc(gridPosi.x, gridPosi.y, xf, yf);
         if (swapPosi != null) {
             windowPosi.put(window, swapPosi);

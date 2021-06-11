@@ -16,5 +16,4 @@ public enum VDEvent {
     AreaShrink, AreaExpand,
     ToggleTiling, 
     DisplayInMonitor,
-    MaxmizeFeature,
 }

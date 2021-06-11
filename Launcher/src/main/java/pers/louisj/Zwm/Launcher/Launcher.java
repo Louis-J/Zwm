@@ -33,20 +33,12 @@ public class Launcher {
             e.printStackTrace();
         }
         // // init config
-        // Context context = ConfigHelper.Config();
-        // if(context == null)
-        // context = new Context();
+        ConfigHelper ch = new ConfigHelper();
+        Context context = ch.GetContext();
+        if (context == null)
+            throw new Error("context is null!");
 
         // SysTray.Init();
-
-        Context context;
-        context = new Context();
-        context.DefaultConfig();
-
-        context.vdMan.ActionVD.VDCreate("1", null, null);
-        context.vdMan.ActionVD.VDCreate("2", null, null);
-        context.vdMan.ActionVD.VDCreate("3", null, null);
-        context.vdMan.ActionVD.VDCreate("4", null, null);
 
         context.vdMan.filterIgnore.Build();
 
@@ -57,7 +49,6 @@ public class Launcher {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         context.mainloop.channelIn.put(new VDManMessage(VDManEvent.RefreshMonitors, null));

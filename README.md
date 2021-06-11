@@ -23,9 +23,9 @@
   + [ ] i3-like Bar
   + [ ] More Plug-in...
 
-+ [ ] Very easy to use and customize
-  + [ ] Change your setting in config.java
-  + [ ] Or change the world in config.java(layouts, keybinds, ...)
++ [x] Very easy to use and customize
+  + [x] Change your setting in config.java
+  + [x] Or change the world in config.java(layouts, keybinds, ...)
 
 # TODO
 + float mode
@@ -38,6 +38,12 @@
 
 # Thanks to: 
 https://github.com/sonicmouse/ProcCmdLine
+
+## 动态编译参考:
+
+https://github.com/apache/storm
+
+storm/sql/storm-sql-core/src/jvm/org/apache/storm/sql/javac/CompilingClassLoader.java
 
 
 # Why do you use java?
