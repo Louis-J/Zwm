@@ -33,6 +33,7 @@ public class VirtualDeskFilter extends WindowFilter {
         // IgnoreName("\\bin\\java.exe");
         
         MatchClass("Chrome_WidgetWin_1"); // Ignore Visual Studio Code for Debug
+        MatchName("Mozilla Firefox"); // Ignore Mozilla Firefox for Debug
 
         MatchNames(new ArrayList<>(Arrays.asList(new String[] { "SearchUI", "ShellExperienceHost", "LockApp",
                 "PeopleExperienceHost", "StartMenuExperienceHost", "SearchApp", "ScreenClippingHost", })));

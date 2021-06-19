@@ -15,5 +15,5 @@ public enum VDEvent {
     ResetLayout,
     AreaShrink, AreaExpand,
     ToggleTiling, 
-    DisplayInMonitor,
+    WindowMinimizeStart, WindowMinimizeEnd,
 }

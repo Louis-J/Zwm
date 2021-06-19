@@ -5,3 +5,7 @@
 build
 bin
 logs
+min-lib-6.1
+qt-6.1.0
+qtlibs-6.1.0
+libs

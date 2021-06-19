@@ -8,13 +8,12 @@ import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
 import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskManager;
 import pers.louisj.Zwm.Core.Utils.Async.Channel;
-import pers.louisj.Zwm.Core.Utils.Async.Channel2;
 
 public class MainLoop extends Thread {
     public static Logger logger = LogManager.getLogger("MainLoop");
 
     private final VirtualDeskManager virtualDeskManager;
-    public Channel<Message> channelIn = new Channel2<>(1024);
+    public Channel<Message> channelIn = new Channel<>(1024);
 
     public MainLoop(VirtualDeskManager virtualDeskManager) {
         super();

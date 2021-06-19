@@ -23,4 +23,6 @@ public interface MyUser32 extends User32 {
 
     Pointer DeferWindowPos(Pointer hWinPosInfo, HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy,
             int uFlags);
+
+    <T> boolean PostMessage(HWND hWnd, int msg, WPARAM wParam, T lParam);
 }

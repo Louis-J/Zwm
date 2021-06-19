@@ -4,12 +4,13 @@
 
 plugins {
     id 'application'
+    id 'java-library'
 }
 
-group 'pers.louisj.Zwm.Launcher'
+group 'pers.louisj.Zwm.Bar'
 version '0.0.1'
 
-applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-XX:+UseZGC", "-Dfile.encoding=utf-8"]
+// applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-XX:+UseZGC", "-Djava.library.path=F:\\Program\\ProMaker\\Java\\qtjambi-5.15.2\\bin", "-Djava.library.path=F:\\Program\\ProMaker\\CCPP\\Qt_MSVC\\5.15.1\\msvc2019_64\\bin"]
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -33,26 +34,9 @@ dependencies {
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.8.0'
     implementation group: 'net.java.dev.jna', name: 'jna-platform', version: '5.8.0'
 
-    implementation group: 'org.louisj', name: 'Zwm.SysTray', version: '0.0.1'
+    // implementation fileTree(include: ['*.jar'], dir: '../libs/qtjambi-5.15.2-for-JDK1.8')
+    // implementation fileTree(include: ['*.jar'], dir: '../libs/qtjambi-6.1-for-JDK1.8')
+    implementation fileTree(include: ['*.jar'], dir: '../libs/myqtjambi-6.1')
+    
     implementation project(":Core")
-    implementation project(":Bar")
-}
-
-application {
-    // Define the main class for the application.
-    mainClass = 'pers.louisj.Zwm.Launcher.Launcher'
-}
-
-jar {
-    // 指定jar包包名
-    // 指定版本号
-    // version = '0.0.1'
-    manifest {
-        // 指定jar的入口类
-        attributes "Manifest-Version": 1.0, 'Main-Class': 'pers.louisj.Zwm.Launcher.Launcher'
-    }
-}
-
-run {
-    standardInput = System.in
 }

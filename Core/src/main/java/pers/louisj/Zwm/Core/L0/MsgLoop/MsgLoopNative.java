@@ -2,7 +2,6 @@ package pers.louisj.Zwm.Core.L0.MsgLoop;
 
 import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.platform.win32.WinUser;
-import com.sun.jna.platform.win32.WinUser.MSG;
 
 import pers.louisj.Zwm.Core.Global.Message.Message;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
@@ -10,11 +9,13 @@ import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
 import pers.louisj.Zwm.Core.Utils.Async.Channel;
 import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
-public class MsgLoop extends Thread {
+public class MsgLoopNative extends Thread implements IMsgLoop {
+    private static final int threadId = WinHelper.Kernel32Inst.GetCurrentThreadId();
+
     private volatile int nativeThreadId = 0;
     private Channel<Message> mainLoopChan;
 
-    public MsgLoop(Channel<Message> mainLoopChan) {
+    public MsgLoopNative(Channel<Message> mainLoopChan) {
         this.mainLoopChan = mainLoopChan;
         setName("MsgLoop Thread");
     }
@@ -22,7 +23,7 @@ public class MsgLoop extends Thread {
     @Override
     public void run() {
         final int WM_DISPLAYCHANGE = 0x007e;
-        MSG msg = new WinUser.MSG();
+        var msg = new WinUser.MSG();
 
         // Make sure message loop is prepared
         WinHelper.MyUser32Inst.PeekMessage(msg, null, 0, 0, 0);
@@ -42,12 +43,18 @@ public class MsgLoop extends Thread {
                 // Error case
                 // throw new Win32Exception(WinHelper.Kernel32Inst.GetLastError());
                 new Win32Exception(WinHelper.Kernel32Inst.GetLastError()).printStackTrace();
-                // Context.logger.error(new Win32Exception(WinHelper.Kernel32Inst.GetLastError()).toString());
+                // Context.logger.error(new
+                // Win32Exception(WinHelper.Kernel32Inst.GetLastError()).toString());
             }
         }
     }
 
     public void exit() {
         WinHelper.MyUser32Inst.PostThreadMessage(nativeThreadId, WinUser.WM_QUIT, null, null);
+    }
+
+    @Override
+    public int GetThreadId() {
+        return threadId;
     }
 }

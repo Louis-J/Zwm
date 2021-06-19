@@ -15,6 +15,8 @@ public enum VDManEvent {
     SwitchToVD,
     SwitchMonitorToVD,
     Foreground,
-    WindowAdd, WindowRemove,
+    WindowAdd,
+    WindowAddInit,
+    WindowRemove,
     MoveWindowToVD,
 }

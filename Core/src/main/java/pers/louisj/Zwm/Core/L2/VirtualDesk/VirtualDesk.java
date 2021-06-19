@@ -20,13 +20,157 @@ public class VirtualDesk {
     private String name;
 
     public HashSet<Window> allWindows = new HashSet<>();
-    private Monitor monitor = null;
+    public Monitor monitor = null;
     private ILayout layout;
     public Window lastFocused = null;
 
     public VirtualDeskRouter router;
 
     public ActionImpl Action = new ActionImpl();
+
+    public ActionLayoutImpl ActionLayout = new ActionLayoutImpl();
+    public ActionOtherImpl ActionOther = new ActionOtherImpl();
+
+    public class ActionLayoutImpl {
+        public void TurnWindowLeft() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.ShiftLeft(lastFocused);
+        }
+
+        public void TurnWindowRight() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.ShiftRight(lastFocused);
+        }
+
+        public void TurnWindowUp() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.ShiftUp(lastFocused);
+        }
+
+        public void TurnWindowDown() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.ShiftDown(lastFocused);
+        }
+
+        public void AreaShrink() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.AreaShrink(lastFocused);
+        }
+
+        public void AreaExpand() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.AreaExpand(lastFocused);
+        }
+
+        public void WindowMoveResize() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.WindowMoveResize(lastFocused);
+        }
+
+        // TODO:
+        public void WindowToggleMinimize(Window window) {
+            if (layout != null) {
+                window.Refresh.RefreshState();
+                layout.ToggleMinimize(window);
+            }
+        }
+
+        public void ResetLayout() {
+            if (layout != null) {
+                layout.ResetLayout();
+            }
+        }
+
+        // TODO:
+        public void ToggleTiling(Window window) {
+            if (layout != null) {
+                layout.WindowToggleLayout(window);
+            }
+        }
+    }
+
+    public class ActionOtherImpl {
+        public void WindowAdd(Window window) {
+            logger.info("WindowAdd, {}", window);
+            allWindows.add(window);
+
+            if (monitor == null)
+                window.Action.Hide();
+            else
+                window.Action.ShowNoActive();
+
+            if (layout != null && window.Query.CanLayout()) {
+                layout.WindowAdd(window);
+            }
+        }
+
+        public void WindowRemove(Window window) {
+            logger.info("WindowRemove, {}", window);
+            allWindows.remove(window);
+
+            if (layout != null && window.Query.CanLayout()) {
+                layout.WindowRemove(window);
+                // window.Action.DecorateDisable();
+            }
+            if (lastFocused == window)
+                lastFocused = null;
+        }
+
+        // TODO:
+        public void WindowUpdate(Window window, WindowEvent updateType) {
+            // layout.DoLayoutFull();
+            // if (type == WindowUpdateType.Foreground)
+            // _lastFocused = window;
+
+            // if (layout)
+            // synchronized (layoutWindows) {
+            // if (layoutWindows.contains(window))
+            // DoLayout();
+            // }
+        }
+
+        public void Focus() {
+            if (lastFocused != null)
+                lastFocused.Action.Focus();
+        }
+
+        public void Enable(Monitor m) {
+            for (var w : allWindows)
+                w.Action.ShowNoActive();
+            monitor = m;
+            if (layout != null)
+                layout.Enable(m.GetWorkingRect());
+        }
+
+        public void Disable() {
+            monitor = null;
+            for (var w : allWindows)
+                w.Action.Hide();
+            if (layout != null)
+                layout.Disable();
+        }
+
+        public HashSet<Window> GetAllWindows() {
+            HashSet<Window> copy = new HashSet<Window>();
+            copy.addAll(allWindows);
+            return copy;
+        }
+
+        public HashSet<Window> GetLayoutWindows() {
+            if (layout == null)
+                return new HashSet<Window>();
+            HashSet<Window> copy = new HashSet<Window>();
+            copy.addAll(layout.GetWindows());
+            return copy;
+        }
+    }
 
     public class ActionImpl {
         public void TurnWindowLeft() {
@@ -293,44 +437,42 @@ public class VirtualDesk {
                 break;
             }
             case TurnWindowLeft: {
-                Action.TurnWindowLeft();
+                ActionLayout.TurnWindowLeft();
                 break;
             }
             case TurnWindowRight: {
-                Action.TurnWindowRight();
+                ActionLayout.TurnWindowRight();
                 break;
             }
             case TurnWindowUp: {
-                Action.TurnWindowUp();
+                ActionLayout.TurnWindowUp();
                 break;
             }
             case TurnWindowDown: {
-                Action.TurnWindowDown();
+                ActionLayout.TurnWindowDown();
                 break;
             }
-            // TODO: NOTTESTED
             case ResetLayout: {
-                ResetLayout();
+                ActionLayout.ResetLayout();
                 break;
             }
-            // TODO: NOTTESTED
             case AreaShrink: {
-                Action.AreaShrink();
+                ActionLayout.AreaShrink();
                 break;
             }
-            // TODO: NOTTESTED
             case AreaExpand: {
-                Action.AreaExpand();
+                ActionLayout.AreaExpand();
                 break;
             }
-            // TODO: NOTTESTED
             case WindowUpdateLocation: {
-                Action.WindowMoveResize();
+                ActionLayout.WindowMoveResize();
+                break;
+            }
+            case ToggleTiling: {
+                ActionLayout.ToggleTiling((Window) msg.param);
                 break;
             }
             // TODO:
-            case ToggleTiling:
-            case DisplayInMonitor:
             default:
                 break;
         }

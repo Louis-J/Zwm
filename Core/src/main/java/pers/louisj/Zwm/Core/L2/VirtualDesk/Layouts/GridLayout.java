@@ -463,6 +463,34 @@ class WindowGrid {
         }
     }
 
+    public void ToggleMinimize(WindowColumn wc, WindowUnit wu, boolean isMinimize) {
+        if (isMinimize) {
+            sumShow--;
+            wc.sizeShow--;
+            wc.CalclayoutShow();
+            if (wc.sizeShow == 0) {
+                sizeShow--;
+                CalclayoutShow();
+                layoutState = 2;
+                return;
+            }
+            layoutState = 1;
+            return;
+        } else {
+            sumShow++;
+            wc.sizeShow++;
+            wc.CalclayoutShow();
+            if (wc.sizeShow == 1) {
+                sizeShow++;
+                CalclayoutShow();
+                layoutState = 2;
+                return;
+            }
+            layoutState = 1;
+            return;
+        }
+    }
+
     public void ResetLayout() {
         var percent = 1f / sizeAll;
         for (var c = begin; c != null; c = c.next) {
@@ -824,5 +852,76 @@ public class GridLayout implements ILayout {
             ChangeLoc(window, gridPosi);
         else
             ChangeSize(window, gridPosi);
+    }
+
+    @Override
+    public boolean WindowAdd(Window window) {
+        logger.info("GridLayout.WindowAdd, {}", window);
+        if (windowsGrid.sizeAll == 0) {
+            windowPosi.put(window, windowsGrid.AddToNewColumn(window));
+            if (!window.Query.IsMinimized())
+                DoLayoutFull();
+            return true;
+        }
+        WindowColumn minNum = windowsGrid.begin;
+        for (var c = minNum.next; c != null; c = c.next) {
+            if (c.sizeAll < minNum.sizeAll && c.sizeAll < windowsGrid.sizeAll) {
+                minNum = c;
+            }
+        }
+        if (minNum.sizeAll < windowsGrid.sizeAll) {
+            AddToColumn(window, minNum);
+        } else {
+            AddToNewColumn(window);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean WindowRemove(Window window) {
+        logger.info("GridLayout.WindowRemove, {}", window);
+        var gridPosi = windowPosi.remove(window);
+        if (gridPosi == null)
+            return false;
+
+        windowsGrid.RemoveWindow(gridPosi.x, gridPosi.y);
+        switch (windowsGrid.layoutState) {
+            case 1:
+                DoLayoutColumn(gridPosi.x);
+                break;
+            case 2:
+                DoLayoutFull();
+                break;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean WindowToggleLayout(Window window) {
+        logger.info("GridLayout.WindowToggleLayout, {}", window);
+        var gridPosi = windowPosi.get(window);
+        if (gridPosi == null) {
+            return WindowAdd(window);
+        } else {
+            return WindowRemove(window);
+        }
+    }
+
+    @Override
+    public void ToggleMinimize(Window window, boolean isMinimize) {
+        logger.info("ToggleMinimize, {}, {}", window, isMinimize);
+        var gridPosi = windowPosi.get(window);
+        if (gridPosi == null)
+            return;
+        windowsGrid.ToggleMinimize(gridPosi.x, gridPosi.y, isMinimize);
+
+        switch (windowsGrid.layoutState) {
+            case 1:
+                DoLayoutColumn(gridPosi.x);
+                break;
+            case 2:
+                DoLayoutFull();
+                break;
+        }
     }
 }

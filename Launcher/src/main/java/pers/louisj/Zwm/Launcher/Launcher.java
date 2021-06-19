@@ -27,20 +27,23 @@ public class Launcher {
     }
 
     public static void main(String[] args) {
-        try {
-            System.setOut(new PrintStream(System.out, true, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        // try {
+        // System.setOut(new PrintStream(System.out, true, "UTF-8"));
+        // } catch (UnsupportedEncodingException e) {
+        // e.printStackTrace();
+        // }
         // // init config
         ConfigHelper ch = new ConfigHelper();
         Context context = ch.GetContext();
         if (context == null)
             throw new Error("context is null!");
+            
+        context.mainloop.channelIn.put(new VDManMessage(VDManEvent.RefreshMonitors, null));
 
         // SysTray.Init();
 
         context.vdMan.filterIgnore.Build();
+        context.vdMan.filterLayout.Build();
 
         // // init windowhook
         context.hookMan.Init();
@@ -51,7 +54,6 @@ public class Launcher {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        context.mainloop.channelIn.put(new VDManMessage(VDManEvent.RefreshMonitors, null));
         // // load state after restart
         // var state = context.LoadState();
         // if (state != null) {

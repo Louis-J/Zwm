@@ -11,7 +11,7 @@ import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouterMan;
 
 public class VirtualDeskRouter extends WindowFilter {
 
-    private static Logger logger = LogManager.getLogger("LayoutFilter");
+    private static Logger logger = LogManager.getLogger("VirtualDeskRouter");
     private VirtualDeskRouterMan vdr;
 
     public VirtualDeskRouter(VirtualDeskRouterMan vdr) {

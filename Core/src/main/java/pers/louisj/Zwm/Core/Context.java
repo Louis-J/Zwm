@@ -4,7 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.L0.KeyBind.KeybindManager;
-import pers.louisj.Zwm.Core.L0.MsgLoop.MsgLoop;
+import pers.louisj.Zwm.Core.L0.MsgLoop.IMsgLoop;
+import pers.louisj.Zwm.Core.L0.MsgLoop.MsgLoopNative;
+import pers.louisj.Zwm.Core.L0.MsgLoop.MsgLoopQT;
 import pers.louisj.Zwm.Core.L0.SysHook.SysHookManager;
 import pers.louisj.Zwm.Core.L1.MainLoop;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskFilter;
@@ -22,7 +24,8 @@ public class Context {
 
     public KeybindManager keyBindMan = new KeybindManager(this);
     public SysHookManager hookMan = new SysHookManager();
-    private MsgLoop msgloop = new MsgLoop(mainloop.channelIn);
+    public IMsgLoop msgloop = new MsgLoopNative(mainloop.channelIn);
+    // public IMsgLoop msgloop = new MsgLoopQT(mainloop.channelIn);
 
     // public VirtualDeskFilter vdFilter = new VirtualDeskFilter();
 

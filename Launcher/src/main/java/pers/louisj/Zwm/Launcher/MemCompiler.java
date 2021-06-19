@@ -52,15 +52,6 @@ public class MemCompiler {
         return byteCodeForClasses;
     }
 
-    // @Override
-    // public Class<?> findClass(String name) throws ClassNotFoundException {
-    // ByteArrayOutputStream byteCode = byteCodeForClasses.get(name);
-    // if (byteCode == null) {
-    // throw new ClassNotFoundException(name);
-    // }
-    // return defineClass(name, byteCode.toByteArray(), 0, byteCode.size());
-    // }
-
     public boolean Compile(String className, String sourceCode, List<String> options, Writer writer) {
         JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
 
