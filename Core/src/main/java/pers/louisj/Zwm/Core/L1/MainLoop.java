@@ -54,7 +54,7 @@ public class MainLoop extends Thread {
             } else if (msg instanceof VDMessage) {
                 var vdmsg = (VDMessage) msg;
                 logger.info("MainLoop, VDMessage, {}, {}, focusedIndex = {}", vdmsg.event, vdmsg.param, virtualDeskManager.focusedIndex);
-                virtualDeskManager.GetFocusdVD().Deal(vdmsg);
+                virtualDeskManager.Query.GetFocusdVD().Deal(vdmsg);
             } else {
                 logger.info("MainLoop, UnknownMessage, {}", msg);
             }

@@ -74,12 +74,13 @@ public class VirtualDesk {
             layout.WindowMoveResize(lastFocused);
         }
 
-        // TODO:
-        public void WindowToggleMinimize(Window window) {
+        public void WindowToggleMinimize(Window window, boolean isMinimize) {
+            window.Refresh.RefreshState();
             if (layout != null) {
-                window.Refresh.RefreshState();
-                layout.ToggleMinimize(window);
+                layout.ToggleMinimize(window, isMinimize);
             }
+            if (!isMinimize && window.Query.IsFocused())
+                lastFocused = window;
         }
 
         public void ResetLayout() {
@@ -470,6 +471,14 @@ public class VirtualDesk {
             }
             case ToggleTiling: {
                 ActionLayout.ToggleTiling((Window) msg.param);
+                break;
+            }
+            case WindowMinimizeStart: {
+                ActionLayout.WindowToggleMinimize((Window) msg.param, true);
+                break;
+            }
+            case WindowMinimizeEnd: {
+                ActionLayout.WindowToggleMinimize((Window) msg.param, false);
                 break;
             }
             // TODO:

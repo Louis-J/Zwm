@@ -50,7 +50,16 @@ public class Window {
         public void Focus() {
             logger.info("Focus, {}", this);
             WinHelper.MyUser32Inst.SetForegroundWindow(hWnd);
-            Refresh.RefreshState();
+        }
+
+        public boolean Unfocus() {
+            logger.info("Unfocus, {}", this);
+            final int GW_HWNDNEXT = 2;
+            var hWndNext = WinHelper.MyUser32Inst.GetWindow(hWnd, GW_HWNDNEXT);
+            if(hWndNext == null || hWndNext.getPointer() == null || Pointer.nativeValue(hWndNext.getPointer()) == 0)
+                return false;
+            WinHelper.MyUser32Inst.SetForegroundWindow(hWndNext);
+            return true;
         }
 
         public void Hide() {
@@ -238,7 +247,7 @@ public class Window {
                 state = 2;
             else
                 state = 0;
-            if (WinHelper.MyUser32Inst.GetForegroundWindow() == hWnd)
+            if (hWnd.equals(WinHelper.MyUser32Inst.GetForegroundWindow()))
                 state |= 4;
         }
 
