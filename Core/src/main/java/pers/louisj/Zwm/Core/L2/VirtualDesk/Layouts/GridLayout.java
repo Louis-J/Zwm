@@ -711,7 +711,7 @@ public class GridLayout implements ILayout {
     }
 
     public void AreaShrink(Window window) {
-        logger.info("GridLayout.AreaExpand, {}", window);
+        logger.info("GridLayout.AreaShrink, {}", window);
         var gridPosi = windowPosi.get(window);
         if (gridPosi == null)
             return;

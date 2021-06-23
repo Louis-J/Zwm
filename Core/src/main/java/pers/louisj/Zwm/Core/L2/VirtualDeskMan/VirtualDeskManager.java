@@ -227,7 +227,7 @@ public class VirtualDeskManager {
                 boolean isForeground = window.hWnd.equals(forew);
 
                 VirtualDesk target;
-                var monitor = Monitor.GetMonitorByHwnd(window.hWnd);
+                var monitor = Monitor.GetMonitorByWindow(window);
                 if (monitor != null)
                     target = monitor.vd;
                 else

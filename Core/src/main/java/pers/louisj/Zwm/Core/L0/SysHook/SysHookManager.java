@@ -10,6 +10,7 @@ import com.sun.jna.platform.win32.WinDef.DWORD;
 import com.sun.jna.platform.win32.WinDef.HMODULE;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.LONG;
+import com.sun.jna.platform.win32.WinDef.POINT;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.platform.win32.WinUser.WinEventProc;
 import com.sun.jna.platform.win32.WinUser.HHOOK;
@@ -30,10 +31,10 @@ import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
 import pers.louisj.Zwm.Core.L2.Window.Window;
 // import pers.louisj.Zwm.Core.Utils.Async.Channel;
 import pers.louisj.Zwm.Core.Utils.Async.ChannelList;
+import pers.louisj.Zwm.Core.Utils.Types.Point;
 import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 public class SysHookManager {
-
     private static final int EVENT_OBJECT_DESTROY = 0x8001;
     private static final int EVENT_OBJECT_SHOW = 0x8002;
 
@@ -69,18 +70,18 @@ public class SysHookManager {
     }
 
     public void Init() {
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_SHOW, new HMODULE(),
-                windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, new HMODULE(),
-                windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_NAMECHANGE,
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_SHOW,
                 new HMODULE(), windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MINIMIZESTART, EVENT_SYSTEM_MINIMIZEEND,
-                new HMODULE(), windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MOVESIZEEND, EVENT_SYSTEM_MOVESIZEEND,
-                new HMODULE(), windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
-                new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_CLOAKED,
+                EVENT_OBJECT_UNCLOAKED, new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_NAMECHANGE,
+                EVENT_OBJECT_NAMECHANGE, new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MINIMIZESTART,
+                EVENT_SYSTEM_MINIMIZEEND, new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MOVESIZEEND,
+                EVENT_SYSTEM_MOVESIZEEND, new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
+                EVENT_SYSTEM_FOREGROUND, new HMODULE(), windowHook, 0, 0, 0));
 
         // hookexs.add(WinHelper.MyUser32Inst.SetWindowsHookEx(WH_MOUSE_LL, mouseHook,
         // new HMODULE(), 0));
@@ -93,8 +94,7 @@ public class SysHookManager {
         WindowRegisterInit(hwnds);
     }
 
-    public void Start() {
-    }
+    public void Start() {}
 
     public void Defer() {
         logger.info("WindowHookManager Defer Start");
@@ -107,8 +107,8 @@ public class SysHookManager {
     }
 
     public WinEventProc windowHook = new WinEventProc() {
-        public void callback(HANDLE hWinEventHook, DWORD event, HWND hwnd, LONG idObject, LONG idChild,
-                DWORD dwEventThread, DWORD dwmsEventTime) {
+        public void callback(HANDLE hWinEventHook, DWORD event, HWND hwnd, LONG idObject,
+                LONG idChild, DWORD dwEventThread, DWORD dwmsEventTime) {
             // logger.info("WindowHook - , {}", Integer.toHexString(event.intValue()));
             if (EventWindowIsValid(idChild, idObject, hwnd)) {
                 switch (event.intValue()) {
@@ -121,12 +121,14 @@ public class SysHookManager {
                     // TODO: For Debug, Never See
                     case EVENT_OBJECT_CLOAKED: {
                         var window = windows.get(hwnd);
-                        logger.error("WinEventProc, event = EVENT_OBJECT_CLOAKED, window = {}", window);
+                        logger.error("WinEventProc, event = EVENT_OBJECT_CLOAKED, window = {}",
+                                window);
                         break;
                     }
                     case EVENT_OBJECT_UNCLOAKED: {
                         var window = windows.get(hwnd);
-                        logger.error("WinEventProc, event = EVENT_OBJECT_UNCLOAKED, window = {}", window);
+                        logger.error("WinEventProc, event = EVENT_OBJECT_UNCLOAKED, window = {}",
+                                window);
                         break;
                     }
                     case EVENT_SYSTEM_MINIMIZESTART: {
@@ -141,9 +143,19 @@ public class SysHookManager {
                             eventChans.put(new VDMessage(VDEvent.WindowMinimizeEnd, window));
                         break;
                     }
-                    case EVENT_SYSTEM_FOREGROUND:
-                        eventChans.put(new VDManMessage(VDManEvent.Foreground, windows.get(hwnd)));
+                    case EVENT_SYSTEM_FOREGROUND: {
+                        var window = windows.get(hwnd);
+                        if (window != null)
+                            eventChans.put(
+                                    new VDManMessage(VDManEvent.Foreground, windows.get(hwnd)));
+                        else {
+                            POINT p2p = new POINT();
+                            WinHelper.MyUser32Inst.GetCursorPos(p2p);
+                            eventChans.put(new VDManMessage(VDManEvent.Foreground,
+                                    new Point(p2p.x, p2p.y)));
+                        }
                         break;
+                    }
                     case EVENT_SYSTEM_MOVESIZEEND: {
                         var window = windows.get(hwnd);
                         if (window != null) {
