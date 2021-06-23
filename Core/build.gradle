@@ -38,7 +38,6 @@ dependencies {
 
     implementation group: 'org.ahocorasick', name: 'ahocorasick', version: '0.6.3'
 
-    // implementation fileTree(include: ['*.jar'], dir: '../libs/qtjambi-6.1-for-JDK1.8')
     implementation fileTree(include: ['*.jar'], dir: '../libs/myqtjambi-6.1')
     
 }

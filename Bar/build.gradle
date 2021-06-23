@@ -34,8 +34,6 @@ dependencies {
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.8.0'
     implementation group: 'net.java.dev.jna', name: 'jna-platform', version: '5.8.0'
 
-    // implementation fileTree(include: ['*.jar'], dir: '../libs/qtjambi-5.15.2-for-JDK1.8')
-    // implementation fileTree(include: ['*.jar'], dir: '../libs/qtjambi-6.1-for-JDK1.8')
     implementation fileTree(include: ['*.jar'], dir: '../libs/myqtjambi-6.1')
     
     implementation project(":Core")

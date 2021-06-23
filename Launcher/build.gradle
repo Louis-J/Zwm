@@ -9,7 +9,9 @@ plugins {
 group 'pers.louisj.Zwm.Launcher'
 version '0.0.1'
 
-applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-XX:+UseZGC", "-Dfile.encoding=utf-8"]
+// applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-XX:+UseZGC"]
+// applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-XX:+UseZGC", "-Dfile.encoding=utf-8"]
+applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-Dfile.encoding=utf-8"]
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -33,7 +35,6 @@ dependencies {
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.8.0'
     implementation group: 'net.java.dev.jna', name: 'jna-platform', version: '5.8.0'
 
-    implementation group: 'org.louisj', name: 'Zwm.SysTray', version: '0.0.1'
     implementation project(":Core")
     implementation project(":Bar")
 }
