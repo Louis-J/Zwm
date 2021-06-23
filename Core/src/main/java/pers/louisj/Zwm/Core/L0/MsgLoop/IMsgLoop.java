@@ -6,4 +6,6 @@ public interface IMsgLoop {
     public void run();
 
     public void exit();
+    
+    public void Defer();
 }

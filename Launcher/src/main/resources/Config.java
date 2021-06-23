@@ -1,6 +1,7 @@
 import com.sun.jna.platform.win32.WinDef.LPARAM;
 import com.sun.jna.platform.win32.WinDef.WPARAM;
 
+import pers.louisj.Zwm.Bar.Bar;
 import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Derived.IConfig;
 import pers.louisj.Zwm.Core.Global.Message.Message;
@@ -28,6 +29,8 @@ public class Config implements IConfig {
                 context.vdMan.ActionGlobal.VDCreate("2", null, new GridLayout());
                 context.vdMan.ActionGlobal.VDCreate("3", null, new GridLayout());
                 context.vdMan.ActionGlobal.VDCreate("4", null, new GridLayout());
+
+                context.pluginMan.Add(new Bar());
 
                 return context;
         };

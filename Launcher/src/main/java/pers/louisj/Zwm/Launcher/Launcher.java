@@ -47,6 +47,9 @@ public class Launcher {
 
         // // init windowhook
         context.hookMan.Init();
+        context.pluginMan.Init();
+
+        context.pluginMan.BeforeRun();
         context.hookMan.Start();
 
         try {

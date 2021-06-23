@@ -57,4 +57,7 @@ public class MsgLoopNative extends Thread implements IMsgLoop {
     public int GetThreadId() {
         return threadId;
     }
+
+    @Override
+    public void Defer() {}
 }
