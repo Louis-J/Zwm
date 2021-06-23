@@ -21,7 +21,8 @@ public class Config implements IConfig {
 
                 ConfigKey(context);
                 // context.keyBindMan.DefaultConfig();
-                context.vdMan.filterIgnore.DefaultConfig();
+                context.filterIgnore.DefaultConfig();
+                context.vdMan.filterLayout.DefaultConfig();
 
                 context.vdMan.ActionGlobal.VDCreate("1", null, new GridLayout());
                 context.vdMan.ActionGlobal.VDCreate("2", null, new GridLayout());
