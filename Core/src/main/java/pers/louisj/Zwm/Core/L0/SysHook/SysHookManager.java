@@ -21,7 +21,7 @@ import com.sun.jna.platform.win32.WinUser.HHOOK;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Global.Message.Message;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
@@ -62,7 +62,10 @@ public class SysHookManager {
     private List<HANDLE> hooks = new ArrayList<>();
     private List<HHOOK> hookexs = new ArrayList<>();
 
-    public SysHookManager() {
+    protected Context context;
+
+    public SysHookManager(Context context) {
+        this.context = context;
     }
 
     public void Init() {
@@ -170,12 +173,11 @@ public class SysHookManager {
             if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
                 int id = Window.QueryStatic.GetWindowPid(hwnd);
 
-                // TODO: Why?
-                if (id == 0) {
-                    logger.error("WindowRegisterInit, ID == 0, hwnd = {}", hwnd);
-                    return;
-                }
                 var window = new Window(hwnd, id);
+                if (context.filterIgnore.CheckMatch(window)) {
+                    logger.info("WindowRegister, Ignored, {}", window);
+                    continue;
+                }
                 windows.put(hwnd, window);
                 registered.add(window);
             }
@@ -188,12 +190,11 @@ public class SysHookManager {
         if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
             int id = Window.QueryStatic.GetWindowPid(hwnd);
 
-            // TODO: Why?
-            if (id == 0) {
-                logger.error("WindowRegister, ID == 0, hwnd = {}", hwnd);
+            var window = new Window(hwnd, id);
+            if (context.filterIgnore.CheckMatch(window)) {
+                logger.info("WindowRegister, Ignored, {}", window);
                 return;
             }
-            var window = new Window(hwnd, id);
             windows.put(hwnd, window);
 
             eventChans.put(new VDManMessage(VDManEvent.WindowAdd, window));

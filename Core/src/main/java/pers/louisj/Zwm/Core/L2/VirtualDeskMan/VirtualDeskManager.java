@@ -47,7 +47,7 @@ public class VirtualDeskManager {
         return new VirtualDesk("more", null, null);
     };
 
-    public VirtualDeskFilter filterIgnore = new VirtualDeskFilter();
+    // public VirtualDeskFilter filterIgnore = new VirtualDeskFilter();
     public LayoutFilter filterLayout = new LayoutFilter();
     public VirtualDeskRouterMan routerMan = new VirtualDeskRouterMan();
 
@@ -110,10 +110,10 @@ public class VirtualDeskManager {
 
         public void WindowAddInit(List<Window> windows) {
             for (var window : windows) {
-                if (filterIgnore.CheckMatch(window)) {
-                    logger.info("WindowAddInit, Ignored, {}", window);
-                    continue;
-                }
+                // if (filterIgnore.CheckMatch(window)) {
+                // logger.info("WindowAddInit, Ignored, {}", window);
+                // continue;
+                // }
 
                 logger.info("WindowAddInit, {}", window);
                 window.Action.SetCanLayout(!filterLayout.CheckMatch(window));
@@ -140,10 +140,10 @@ public class VirtualDeskManager {
         }
 
         public void WindowAdd(Window window) {
-            if (filterIgnore.CheckMatch(window)) {
-                logger.info("WindowAdd, Ignored, {}", window);
-                return;
-            }
+            // if (filterIgnore.CheckMatch(window)) {
+            // logger.info("WindowAdd, Ignored, {}", window);
+            // return;
+            // }
 
             logger.info("WindowAdd, {}", window);
             window.Action.SetCanLayout(!filterLayout.CheckMatch(window));

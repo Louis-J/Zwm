@@ -42,7 +42,7 @@ public class Launcher {
 
         // SysTray.Init();
 
-        context.vdMan.filterIgnore.Build();
+        context.filterIgnore.Build();
         context.vdMan.filterLayout.Build();
 
         // // init windowhook

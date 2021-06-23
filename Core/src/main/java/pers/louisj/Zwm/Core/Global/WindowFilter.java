@@ -16,11 +16,9 @@ public abstract class WindowFilter {
     }
 
     protected ArrayList<String> matchClassStrs = new ArrayList<>();
-    // private ArrayList<String> matchTitleStrs = new ArrayList<>();
     protected ArrayList<String> matchNameStrs = new ArrayList<>();
 
     private Trie matchClassTrie;
-    // private Trie matchTitleTrie;
     private Trie matchNameTrie;
 
     protected ArrayList<FilterCallBack> customFilters = new ArrayList<>();
@@ -29,10 +27,6 @@ public abstract class WindowFilter {
         matchClassStrs.add(str);
     }
 
-    // public void MatchTitle(String str) {
-    //     matchTitleStrs.add(str);
-    // }
-
     public void MatchName(String str) {
         matchNameStrs.add(str);
     }
@@ -40,10 +34,6 @@ public abstract class WindowFilter {
     public void MatchClasses(List<String> strs) {
         matchClassStrs.addAll(strs);
     }
-
-    // public void MatchTitles(List<String> strs) {
-    //     matchTitleStrs.addAll(strs);
-    // }
 
     public void MatchNames(List<String> strs) {
         matchNameStrs.addAll(strs);
@@ -55,7 +45,6 @@ public abstract class WindowFilter {
 
     public void Build() {
         matchClassTrie = Trie.builder().ignoreOverlaps().addKeywords(matchClassStrs).build();
-        // matchTitleTrie = Trie.builder().ignoreOverlaps().addKeywords(matchTitleStrs).build();
         matchNameTrie = Trie.builder().ignoreOverlaps().addKeywords(matchNameStrs).build();
     }
 
@@ -73,13 +62,13 @@ public abstract class WindowFilter {
         }
         match = matchNameTrie.firstMatch(w.processName);
         if (match != null) {
-            GetLogger().info("CheckMatch, Match3, {}", match);
+            GetLogger().info("CheckMatch, Match2, {}", match);
             return true;
         }
 
         for (var f : customFilters) {
             if (f.Invoke(w)) {
-                GetLogger().info("CheckMatch, Match4, {}", f);
+                GetLogger().info("CheckMatch, Match3, {}", f);
                 return true;
             }
         }

@@ -19,11 +19,12 @@ public class Context {
 
     public PluginManager pluginMan = new PluginManager();
     public VirtualDeskManager vdMan = new VirtualDeskManager(this);
+    public VirtualDeskFilter filterIgnore = new VirtualDeskFilter();
 
     public MainLoop mainloop = new MainLoop(vdMan);
 
     public KeybindManager keyBindMan = new KeybindManager(this);
-    public SysHookManager hookMan = new SysHookManager();
+    public SysHookManager hookMan = new SysHookManager(this);
     public IMsgLoop msgloop = new MsgLoopNative(mainloop.channelIn);
     // public IMsgLoop msgloop = new MsgLoopQT(mainloop.channelIn);
 
@@ -53,7 +54,7 @@ public class Context {
 
     public void DefaultConfig() {
         // keyBindMan.DefaultConfig();
-        vdMan.filterIgnore.DefaultConfig();
+        filterIgnore.DefaultConfig();
 
         // SystemTray.AddToContextMenu("enable/disable workspacer", () => Enabled =
         // !Enabled);

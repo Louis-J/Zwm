@@ -41,7 +41,7 @@ public class ConfigHelper {
         configFile = new File(path);
 
         if (!configFile.exists()) {
-            // 第一次使用
+            // first run
             try {
                 FileInputStream fins = new FileInputStream(DefaultConfigFile);
                 byte[] buffer = new byte[fins.available()];
