@@ -11,3 +11,6 @@ qtlibs-6.1.0
 libs
 .idea
 mymin-lib-6.1
+.settings
+*.project
+*.classpath
