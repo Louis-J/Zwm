@@ -37,6 +37,7 @@ import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 public class SysHookManager {
     private static final int EVENT_OBJECT_DESTROY = 0x8001;
     private static final int EVENT_OBJECT_SHOW = 0x8002;
+    private static final int EVENT_OBJECT_HIDE = 0x8003;
 
     private static final int EVENT_OBJECT_CLOAKED = 0x8017;
     private static final int EVENT_OBJECT_UNCLOAKED = 0x8018;
@@ -70,7 +71,7 @@ public class SysHookManager {
     }
 
     public void Init() {
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_SHOW,
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE,
                 new HMODULE(), windowHook, 0, 0, 0));
         hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_CLOAKED,
                 EVENT_OBJECT_UNCLOAKED, new HMODULE(), windowHook, 0, 0, 0));
@@ -118,6 +119,12 @@ public class SysHookManager {
                     case EVENT_OBJECT_DESTROY:
                         WindowUnregister(hwnd);
                         break;
+                    case EVENT_OBJECT_HIDE: {
+                        var window = windows.get(hwnd);
+                        logger.error("WinEventProc, event = EVENT_OBJECT_HIDE, window = {}",
+                                window);
+                        break;
+                    }
                     // TODO: For Debug, Never See
                     case EVENT_OBJECT_CLOAKED: {
                         var window = windows.get(hwnd);
@@ -146,12 +153,12 @@ public class SysHookManager {
                     case EVENT_SYSTEM_FOREGROUND: {
                         var window = windows.get(hwnd);
                         if (window != null)
-                            eventChans.put(
-                                    new VDManMessage(VDManEvent.Foreground, windows.get(hwnd)));
+                            eventChans.put(new VDManMessage(VDManEvent.WindowForeground,
+                                    windows.get(hwnd)));
                         else {
                             POINT p2p = new POINT();
                             WinHelper.MyUser32Inst.GetCursorPos(p2p);
-                            eventChans.put(new VDManMessage(VDManEvent.Foreground,
+                            eventChans.put(new VDManMessage(VDManEvent.MonitorForeground,
                                     new Point(p2p.x, p2p.y)));
                         }
                         break;
@@ -164,7 +171,10 @@ public class SysHookManager {
                         break;
                     }
                     case EVENT_OBJECT_NAMECHANGE:
-                        // TODO: Channel for Plugin
+                        var window = windows.get(hwnd);
+                        if (window != null) {
+                            eventChans.put(new VDManMessage(VDManEvent.WindowTitleChange, window));
+                        }
                         break;
                 }
             }
@@ -186,7 +196,7 @@ public class SysHookManager {
                 int id = Window.QueryStatic.GetWindowPid(hwnd);
 
                 var window = new Window(hwnd, id);
-                if (context.filterIgnore.CheckMatch(window)) {
+                if (context.filterVirtualDesk.CheckMatch(window)) {
                     logger.info("WindowRegister, Ignored, {}", window);
                     continue;
                 }
@@ -203,7 +213,7 @@ public class SysHookManager {
             int id = Window.QueryStatic.GetWindowPid(hwnd);
 
             var window = new Window(hwnd, id);
-            if (context.filterIgnore.CheckMatch(window)) {
+            if (context.filterVirtualDesk.CheckMatch(window)) {
                 logger.info("WindowRegister, Ignored, {}", window);
                 return;
             }

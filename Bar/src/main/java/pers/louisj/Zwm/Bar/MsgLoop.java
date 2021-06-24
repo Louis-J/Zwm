@@ -1,16 +1,19 @@
 package pers.louisj.Zwm.Bar;
 
-import java.lang.ref.Reference;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Condition;
 import org.apache.logging.log4j.Logger;
-
+import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Global.Message.Message;
 import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessage;
+import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessageCustom;
+import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessageFocus;
+import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessageRefresh;
+import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
-import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
+import pers.louisj.Zwm.Core.L1.MainLoop.MessageHook;
 import pers.louisj.Zwm.Core.L2.VirtualDesk.VirtualDesk;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.Monitor;
 import pers.louisj.Zwm.Core.L2.Window.Window;
@@ -23,92 +26,163 @@ import io.qt.widgets.QApplication;
 
 // public class MsgLoop extends Thread {
 public class MsgLoop extends QThread {
-    Channel<Message> channelIn = new Channel<>(1024);
+    Channel<PluginMessage> channelIn = new Channel<>(1024);
     protected Logger logger;
-    protected DebugBarWindow debugBarWindow;
+    protected DebugBarWindow debugBarWindow = new DebugBarWindow();
+    protected Map<Monitor, BarWindow> barMap = new HashMap<>();
+    protected Monitor lastFocused;
     protected Bar bar;
     protected QApplication qa;
+    protected Context context;
 
-    public MsgLoop(Logger logger, Bar bar, DebugBarWindow debugBarWindow) {
+    public MsgLoop(Logger logger, Bar bar, Context context) {
         super();
         setName("Bar Plugin MainLoop Thread");
         this.logger = logger;
         this.bar = bar;
-        this.debugBarWindow = debugBarWindow;
+        this.context = context;
+
+        context.mainloop.hooks.add(new MessageHook() {
+            Object obj = new Object();
+
+            public boolean Invoke(Message msg) {
+                if (msg instanceof VDManMessage
+                        && ((VDManMessage) msg).event == VDManEvent.RefreshMonitors) {
+                    synchronized (obj) {
+                        channelIn.put(new PluginMessageCustom(obj));
+                        try {
+                            obj.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                return false;
+            }
+        });
     }
 
     public void Defer() {
-        logger.info("Bar Plugin MainLoop Defer Start");
+        logger.info("Bar Plugin MainLoop, Defer, Start");
         channelIn.put(null);
-        logger.info("Bar Plugin MainLoop Defer 1");
         this.join();
-        logger.info("Bar Plugin MainLoop Defer End");
+        debugBarWindow.close();
+        for (var barW : barMap.values()) {
+            barW.Defer();
+            barW.close();
+        }
+        logger.info("Bar Plugin MainLoop, Defer, End");
     }
 
     public void Start() {
         qa = QApplication.instance();
+        debugBarWindow.show();
         this.start();
     }
 
     @Override
     public void run() {
         while (true) {
-            Message msg = channelIn.take();
+            PluginMessage msg = channelIn.take();
             if (msg == null) {
                 // Exit
                 return;
-            } else if (msg instanceof VDManMessage) {
-                var wmsg = (VDManMessage) msg;
-                logger.error("Bar Plugin MainLoop, VDManMessage, {}, {}", wmsg.event, wmsg.param);
-            } else if (msg instanceof VDMessage) {
-                var vdmsg = (VDMessage) msg;
-                logger.error("Bar Plugin MainLoop, VDMessage, {}, {}", vdmsg.event, vdmsg.param);
-            } else if (msg instanceof PluginMessage) {
-                var pmsg = (PluginMessage) msg;
-                logger.info("Bar Plugin MainLoop, PluginMessage, {}", pmsg.event);
-                switch (pmsg.event) {
-                    case Foreground: {
-                        VirtualDesk vd = (VirtualDesk) pmsg.param1;
-                        Monitor monitor = (Monitor) pmsg.param2;
-                        Window window = (Window) pmsg.param3;
-                        debugBarWindow.ui.label1.setText(vd.GetName());
-                        debugBarWindow.ui.label2.setText(monitor.toString());
+            }
+            logger.info("Bar Plugin MainLoop, PluginMessage, Start, {}", msg.type);
+            switch (msg.type) {
+                case Focus: {
+                    var pmsg = (PluginMessageFocus) msg;
+                    VirtualDesk vd = (VirtualDesk) pmsg.param;
+                    Monitor monitor = vd.monitor;
+                    Window window = vd.lastFocused;
 
-                        if (window == null)
-                            debugBarWindow.ui.label3.setText("null");
-                        else {
-                            window.Refresh.RefreshTitle();
-                            debugBarWindow.ui.label3.setText(window.toString());
+                    if (lastFocused != monitor) {
+                        if (lastFocused != null) {
+                            var lastBar = barMap.get(lastFocused);
+                            MyEvent.Exec(new MyEvent() {
+                                public void Invoke() {
+                                    lastBar.ui.labelTitle.setStyleSheet("color:#F0F0F0;");
+                                }
+                            });
                         }
-                        break;
-                    }
-                    case DebugForeground: {
-                        String s1 = "|" + pmsg.param1;
-                        String s2 = "|" + pmsg.param2;
-                        String s3 = "|" + pmsg.param3;
-                        // to guarantee the string is in thread-safety
-                        MyEventBlock.Exec(new MyEventBlock() {
-                            @Override
+                        var thisBar = barMap.get(monitor);
+                        MyEvent.Exec(new MyEvent() {
                             public void Invoke() {
-                                debugBarWindow.ui.label1.setText(s1);
-                                debugBarWindow.ui.label2.setText(s2);
-                                debugBarWindow.ui.label3.setText(s3);
+                                thisBar.ui.labelTitle.setStyleSheet("color:#f0B060;");
                             }
                         });
-                        break;
+                        lastFocused = monitor;
+
+                        if (window == null)
+                            MyEvent.Exec(new MyEvent() {
+                                public void Invoke() {
+                                    thisBar.ui.labelTitle.setText("null");
+                                }
+                            });
+                        else {
+                            window.Refresh.RefreshTitle();
+                            MyEvent.Exec(new MyEvent() {
+                                public void Invoke() {
+                                    thisBar.ui.labelTitle.setText(window.windowTitle);
+                                }
+                            });
+                        }
                     }
-                    case RefreshMonitors: {
-                        Set<Monitor> monitors = (Set<Monitor>) pmsg.param1;
+                    break;
+                }
+                case Refresh: {
+                    var pmsg = (PluginMessageRefresh) msg;
+                    VirtualDesk vd = (VirtualDesk) pmsg.param;
+                    Monitor monitor = vd.monitor;
+                    if (monitor == null)
+                        break;
+                    Window window = vd.lastFocused;
+
+                    var thisBar = barMap.get(monitor);
+
+                    if (window == null)
+                        MyEvent.Exec(new MyEvent() {
+
+                            public void Invoke() {
+                                thisBar.ui.labelTitle.setText("null");
+                            }
+                        });
+                    else {
+                        window.Refresh.RefreshTitle();
+                        MyEvent.Exec(new MyEvent() {
+                            public void Invoke() {
+                                thisBar.ui.labelTitle.setText(window.windowTitle);
+                            }
+                        });
+                    }
+                    break;
+                }
+                case Monitors: {
+                    MyEventBlock.Exec(new MyEventBlock() {
+                        public void Invoke() {
+                            for (var p : barMap.entrySet()) {
+                                var window = p.getKey().vd.lastFocused;
+                                if (window == null)
+                                    p.getValue().ui.labelTitle.setText("null");
+                                else {
+                                    window.Refresh.RefreshTitle();
+                                    p.getValue().ui.labelTitle.setText(window.windowTitle);
+                                }
+                            }
+                        }
+                    });
+                    break;
+                }
+                case VDs:
+                    break;
+                case Custom: {
+                    var pmsg = (PluginMessageCustom) msg;
+                    synchronized (pmsg.obj) {
+                        Set<Monitor> monitors = Monitor.GetMonitors();
                         Set<BarWindow> removeBarWindows = new HashSet<>();
-                        for (var p : bar.barMap.entrySet()) {
+                        for (var p : barMap.entrySet()) {
                             if (!monitors.contains(p.getKey())) {
-                                removeBarWindows.add(bar.barMap.remove(p.getKey()));
-                                // MyEventBlock.Exec(new MyEventBlock() {
-                                // public void Invoke() {
-                                // p.getValue().Defer();
-                                // }
-                                // });
-                                // bar.barMap.remove(p.getKey());
+                                removeBarWindows.add(barMap.remove(p.getKey()));
                             }
                         }
                         MyEventBlock.Exec(new MyEventBlock() {
@@ -116,30 +190,33 @@ public class MsgLoop extends QThread {
                                 for (var w : removeBarWindows) {
                                     w.Defer();
                                 }
-                                for (var p : bar.barMap.entrySet()) {
+                                for (var p : barMap.entrySet()) {
                                     p.getValue().Resize(p.getKey().GetWorkingRect());
                                 }
                             }
                         });
-                        for (var m : monitors) {
-                            if (!bar.barMap.containsKey(m)) {
-                                bar.barMap.put(m, MyEventRet.Exec(new MyEventRet() {
-                                    public BarWindow Invoke() {
-                                        // var barW = new BarWindow(bar.barMap.size());
+                        Map<Monitor, BarWindow> newMap = MyEventRet.Exec(new MyEventRet() {
+                            public Map<Monitor, BarWindow> Invoke() {
+                                Map<Monitor, BarWindow> newMap = new HashMap<>();
+                                for (var m : monitors) {
+                                    if (!barMap.containsKey(m)) {
                                         var barW = new BarWindow(m.GetWorkingRect());
                                         barW.show();
-                                        return barW;
+                                        newMap.put(m, barW);
                                     }
-                                }));
+                                }
+                                return newMap;
                             }
-                        }
-                        break;
+                        });
+                        barMap.putAll(newMap);
+                        pmsg.obj.notify();
                     }
+                    break;
                 }
-                logger.info("Bar Plugin MainLoop, PluginMessage, End");
-            } else {
-                logger.error("Bar Plugin MainLoop, UnknownMessage, {}", msg);
+                default:
+                    break;
             }
+            logger.info("Bar Plugin MainLoop, PluginMessage, End");
         }
     }
 }

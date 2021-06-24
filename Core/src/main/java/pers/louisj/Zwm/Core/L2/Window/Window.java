@@ -289,7 +289,7 @@ public class Window {
             return (state & 0x4) != 0;
         }
 
-        private boolean IsCloaked() {
+        public boolean IsCloaked() {
             return isCloaked;
         }
 

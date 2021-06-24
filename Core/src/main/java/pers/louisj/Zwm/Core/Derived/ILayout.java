@@ -17,12 +17,6 @@ public interface ILayout {
 
     public void Disable();
 
-    @Deprecated
-    public void AddWindow(Window window);
-
-    @Deprecated
-    public boolean RemoveWindow(Window window);
-
     public boolean WindowAdd(Window window);
 
     public boolean WindowRemove(Window window);
@@ -40,9 +34,6 @@ public interface ILayout {
     public void ShiftUp(Window window);
 
     public void ShiftDown(Window window);
-
-    @Deprecated
-    public void ToggleMinimize(Window window);
 
     public void ToggleMinimize(Window window, boolean isMinimize);
 

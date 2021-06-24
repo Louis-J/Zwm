@@ -9,7 +9,7 @@ public enum VDEvent {
     // SwitchToPrevVirtualDesk, MoveWindowToPrevVirtualDesk, MoveWindowToNextVirtualDesk, FocusedWindowClose,
     // FocusedWindowMinimize, FocusedWindowMaximize, VDDebugInfo,
 
-    WindowUpdateState,
+    // WindowUpdateState,
     WindowUpdateLocation,
     TurnWindowLeft, TurnWindowRight, TurnWindowUp, TurnWindowDown,
     ResetLayout,

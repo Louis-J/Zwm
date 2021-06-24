@@ -18,7 +18,7 @@ public class Context {
 
     public PluginManager pluginMan = new PluginManager(this);
     public VirtualDeskManager vdMan = new VirtualDeskManager(this);
-    public VirtualDeskFilter filterIgnore = new VirtualDeskFilter();
+    public VirtualDeskFilter filterVirtualDesk = new VirtualDeskFilter();
 
     public MainLoop mainloop = new MainLoop(vdMan);
 
@@ -51,7 +51,7 @@ public class Context {
 
     public void DefaultConfig() {
         keyBindMan.DefaultConfig();
-        filterIgnore.DefaultConfig();
+        filterVirtualDesk.DefaultConfig();
 
         // SystemTray.AddToContextMenu("enable/disable workspacer", () => Enabled =
         // !Enabled);

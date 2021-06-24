@@ -1,0 +1,12 @@
+package pers.louisj.Zwm.Bar;
+
+
+public class MainWindowLauncher {
+    static {
+        QtStaticSetting.Init();
+    }
+
+    public static void main(String[] args) {
+        MainWindow.main(args);
+    }
+}

@@ -22,7 +22,7 @@ public class Config implements IConfig {
 
                 ConfigKey(context);
                 // context.keyBindMan.DefaultConfig();
-                context.filterIgnore.DefaultConfig();
+                context.filterVirtualDesk.DefaultConfig();
                 context.vdMan.filterLayout.DefaultConfig();
 
                 context.vdMan.ActionGlobal.VDCreate("1", null, new GridLayout());
@@ -68,7 +68,7 @@ public class Config implements IConfig {
                                         () -> channelIn.put(new VDManMessage(VDManEvent.SwitchToVD, obji)));
                         context.keyBindMan.Register("Move Focused Window to Virtual Desk " + stri,
                                         KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL, KeyCode.VK_1 + i,
-                                        () -> channelIn.put(new VDManMessage(VDManEvent.MoveWindowToVD, obji)));
+                                        () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, obji)));
                 }
 
                 context.keyBindMan.Register("Switch Focused Monitor to Previous Virtual Desk",
@@ -81,12 +81,12 @@ public class Config implements IConfig {
 
                 context.keyBindMan.Register("Move Focused Window to Previous Virtual Desk",
                                 KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN, KeyCode.VK_LEFT,
-                                () -> channelIn.put(new VDManMessage(VDManEvent.MoveWindowToVD, Integer.valueOf(-1))));
+                                () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, Integer.valueOf(-1))));
 
                 context.keyBindMan.Register("Move Focused Window to Next Virtual Desk",
                                 KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN,
                                 KeyCode.VK_RIGHT,
-                                () -> channelIn.put(new VDManMessage(VDManEvent.MoveWindowToVD, Integer.valueOf(-2))));
+                                () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, Integer.valueOf(-2))));
 
                 context.keyBindMan.Register("Reset Layout of Focused Virtual Desk", KeyCode.FuncKey.LALT, KeyCode.VK_R,
                                 () -> channelIn.put(new VDMessage(VDEvent.ResetLayout, null)));

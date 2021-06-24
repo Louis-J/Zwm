@@ -1,10 +1,8 @@
 package pers.louisj.Zwm.Core.L2.VirtualDeskMan;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,7 +13,6 @@ import com.sun.jna.platform.win32.WinUser.MONITORINFOEX;
 
 import pers.louisj.Zwm.Core.L2.VirtualDesk.VirtualDesk;
 import pers.louisj.Zwm.Core.L2.Window.Window;
-import pers.louisj.Zwm.Core.Utils.Types.Point;
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 

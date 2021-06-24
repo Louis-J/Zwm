@@ -42,7 +42,7 @@ public class Launcher {
 
         // SysTray.Init();
 
-        context.filterIgnore.Build();
+        context.filterVirtualDesk.Build();
         context.vdMan.filterLayout.Build();
 
         // // init windowhook

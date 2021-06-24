@@ -7,12 +7,9 @@ import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Derived.ILayout;
 import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
-import pers.louisj.Zwm.Core.Global.Message.WindowMessage.WindowEvent;
-import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.GridLayout;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.Monitor;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouter;
 import pers.louisj.Zwm.Core.L2.Window.Window;
-import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 
 public class VirtualDesk {
     private static Logger logger = LogManager.getLogger("VirtualDesk");
@@ -26,10 +23,9 @@ public class VirtualDesk {
 
     public VirtualDeskRouter router;
 
-    public ActionImpl Action = new ActionImpl();
 
     public ActionLayoutImpl ActionLayout = new ActionLayoutImpl();
-    public ActionOtherImpl ActionOther = new ActionOtherImpl();
+    public ActionVDImpl ActionVD = new ActionVDImpl();
 
     public class ActionLayoutImpl {
         public void TurnWindowLeft() {
@@ -89,15 +85,14 @@ public class VirtualDesk {
             }
         }
 
-        // TODO:
-        public void ToggleTiling(Window window) {
-            if (layout != null) {
-                layout.WindowToggleLayout(window);
-            }
+        public void ToggleTiling() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.WindowToggleLayout(lastFocused);
         }
     }
 
-    public class ActionOtherImpl {
+    public class ActionVDImpl {
         public void WindowAdd(Window window) {
             logger.info("WindowAdd, {}", window);
             allWindows.add(window);
@@ -124,27 +119,16 @@ public class VirtualDesk {
                 lastFocused = null;
         }
 
-        // TODO:
-        public void WindowUpdate(Window window, WindowEvent updateType) {
-            // layout.DoLayoutFull();
-            // if (type == WindowUpdateType.Foreground)
-            // _lastFocused = window;
-
-            // if (layout)
-            // synchronized (layoutWindows) {
-            // if (layoutWindows.contains(window))
-            // DoLayout();
-            // }
-        }
-
         public void Focus() {
             if (lastFocused != null)
                 lastFocused.Action.Focus();
         }
 
         public void Enable(Monitor m) {
-            for (var w : allWindows)
-                w.Action.ShowNoActive();
+            for (var w : allWindows) {
+                if (!w.Query.IsCloaked())
+                    w.Action.ShowNoActive();
+            }
             monitor = m;
             if (layout != null)
                 layout.Enable(m.GetWorkingRect());
@@ -170,50 +154,6 @@ public class VirtualDesk {
             HashSet<Window> copy = new HashSet<Window>();
             copy.addAll(layout.GetWindows());
             return copy;
-        }
-    }
-
-    public class ActionImpl {
-        public void TurnWindowLeft() {
-            if (lastFocused == null || layout == null)
-                return;
-            layout.ShiftLeft(lastFocused);
-        }
-
-        public void TurnWindowRight() {
-            if (lastFocused == null || layout == null)
-                return;
-            layout.ShiftRight(lastFocused);
-        }
-
-        public void TurnWindowUp() {
-            if (lastFocused == null || layout == null)
-                return;
-            layout.ShiftUp(lastFocused);
-        }
-
-        public void TurnWindowDown() {
-            if (lastFocused == null || layout == null)
-                return;
-            layout.ShiftDown(lastFocused);
-        }
-
-        public void AreaShrink() {
-            if (lastFocused == null || layout == null)
-                return;
-            layout.AreaShrink(lastFocused);
-        }
-
-        public void AreaExpand() {
-            if (lastFocused == null || layout == null)
-                return;
-            layout.AreaExpand(lastFocused);
-        }
-
-        public void WindowMoveResize() {
-            if (lastFocused == null || layout == null)
-                return;
-            layout.WindowMoveResize(lastFocused);
         }
     }
 
@@ -250,7 +190,7 @@ public class VirtualDesk {
     // return allWindows.iterator().next();
     // }
 
-    public void AddWindow(Window window) {
+    public void WindowAdd(Window window) {
         logger.info("AddWindow, {}", window);
         allWindows.add(window);
 
@@ -260,54 +200,33 @@ public class VirtualDesk {
             window.Action.ShowNoActive();
 
         if (layout != null && window.Query.CanLayout()) {
-            layout.AddWindow(window);
+            layout.WindowAdd(window);
             // window.Action.DecorateEnable();
         }
     }
 
-    public void AddWindow(Window window, boolean isLayout) {
+    public void WindowAdd(Window window, boolean isLayout) {
         logger.info("AddWindow, {}, {}", window, isLayout);
         allWindows.add(window);
 
         if (layout != null && isLayout) {
-            layout.AddWindow(window);
+            layout.WindowAdd(window);
             // window.Action.DecorateEnable();
         }
     }
 
-    public void RemoveWindow(Window window) {
+    public void WindowRemove(Window window) {
         logger.info("RemoveWindow, {}", window);
         allWindows.remove(window);
 
         if (layout != null && window.Query.CanLayout()) {
-            layout.RemoveWindow(window);
-            // window.Action.DecorateDisable();
+            layout.WindowRemove(window);
         }
         if (lastFocused == window)
             lastFocused = null;
     }
 
-    public void UpdateWindow(Window window, WindowEvent updateType) {
-        // layout.DoLayoutFull();
-        // if (type == WindowUpdateType.Foreground)
-        // _lastFocused = window;
-
-        // if (layout)
-        // synchronized (layoutWindows) {
-        // if (layoutWindows.contains(window))
-        // DoLayout();
-        // }
-    }
-
-    public void WindowToggleMinimize(Window window) {
-        if (layout != null) {
-            window.Refresh.RefreshState();
-            layout.ToggleMinimize(window);
-        }
-    }
-
     public void ResetLayout() {
-        // GetLayoutEngine().ResetPrimaryArea();
         if (layout != null) {
             layout.ResetLayout();
         }
@@ -432,11 +351,6 @@ public class VirtualDesk {
 
     public void Deal(VDMessage msg) {
         switch (msg.event) {
-            // TODO: Impl
-            case WindowUpdateState: {
-                WindowToggleMinimize((Window) msg.param);
-                break;
-            }
             case TurnWindowLeft: {
                 ActionLayout.TurnWindowLeft();
                 break;
@@ -470,7 +384,7 @@ public class VirtualDesk {
                 break;
             }
             case ToggleTiling: {
-                ActionLayout.ToggleTiling((Window) msg.param);
+                ActionLayout.ToggleTiling();
                 break;
             }
             case WindowMinimizeStart: {
