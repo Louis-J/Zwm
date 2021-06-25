@@ -27,31 +27,36 @@ public class Launcher {
     }
 
     public static void main(String[] args) {
-        try {
-            System.setOut(new PrintStream(System.out, true, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        // try {
+        // System.setOut(new PrintStream(System.out, true, "UTF-8"));
+        // } catch (UnsupportedEncodingException e) {
+        // e.printStackTrace();
+        // }
         // // init config
         ConfigHelper ch = new ConfigHelper();
         Context context = ch.GetContext();
         if (context == null)
             throw new Error("context is null!");
+            
+        context.mainloop.channelIn.put(new VDManMessage(VDManEvent.RefreshMonitors, null));
 
         // SysTray.Init();
 
-        context.vdMan.filterIgnore.Build();
+        context.filterVirtualDesk.Build();
+        context.vdMan.filterLayout.Build();
 
         // // init windowhook
         context.hookMan.Init();
+        context.pluginMan.Init();
+
+        context.pluginMan.BeforeRun();
         context.hookMan.Start();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        context.mainloop.channelIn.put(new VDManMessage(VDManEvent.RefreshMonitors, null));
+        // try {
+        //     Thread.sleep(500);
+        // } catch (InterruptedException e) {
+        //     e.printStackTrace();
+        // }
         // // load state after restart
         // var state = context.LoadState();
         // if (state != null) {

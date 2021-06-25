@@ -30,7 +30,7 @@ public class ConfigHelper {
                 throw new Error("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank");
             }
         }
-        path += "\\.Zwm";
+        path += DirectName;
         configPath = new File(path);
 
         if (!configPath.exists()) {
@@ -41,7 +41,7 @@ public class ConfigHelper {
         configFile = new File(path);
 
         if (!configFile.exists()) {
-            // 第一次使用
+            // first run
             try {
                 FileInputStream fins = new FileInputStream(DefaultConfigFile);
                 byte[] buffer = new byte[fins.available()];
@@ -121,4 +121,5 @@ public class ConfigHelper {
     }
 
     protected static String DefaultConfigFile = System.getProperty("user.dir") + "\\src\\main\\resources\\Config.java";
+    protected static String DirectName = "\\.ZwmDebug";
 }

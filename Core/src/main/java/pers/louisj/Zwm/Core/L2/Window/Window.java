@@ -16,6 +16,7 @@ import com.sun.jna.platform.win32.WinDef.LPARAM;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ByteByReference;
+import com.sun.jna.Structure;
 
 import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.Win32Exception;
@@ -49,7 +50,16 @@ public class Window {
         public void Focus() {
             logger.info("Focus, {}", this);
             WinHelper.MyUser32Inst.SetForegroundWindow(hWnd);
-            Refresh.RefreshState();
+        }
+
+        public boolean Unfocus() {
+            logger.info("Unfocus, {}", this);
+            final int GW_HWNDNEXT = 2;
+            var hWndNext = WinHelper.MyUser32Inst.GetWindow(hWnd, GW_HWNDNEXT);
+            if(hWndNext == null || hWndNext.getPointer() == null || Pointer.nativeValue(hWndNext.getPointer()) == 0)
+                return false;
+            WinHelper.MyUser32Inst.SetForegroundWindow(hWndNext);
+            return true;
         }
 
         public void Hide() {
@@ -108,7 +118,7 @@ public class Window {
             WinHelper.MyUser32Inst.SendNotifyMessage(hWnd, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
         }
 
-        public void SetLocation1(Rectangle rect) {
+        public void SetLocation0(Rectangle rect) {
             if (rectOff == null) {
                 Refresh.RefreshRect();
                 Refresh.RefreshOffset();
@@ -124,6 +134,47 @@ public class Window {
                     return;
                 throw new Win32Exception(errCode);
             }
+            Refresh.RefreshRect(rect);
+        }
+
+        @Structure.FieldOrder({ "cbSize", "rcMonitor", "rcWork", "dwFlags", "szDevice" })
+        public class WINDOWPOS extends Structure {
+            public HWND hwnd;
+            public HWND hwndInsertAfter;
+            public int x;
+            public int y;
+            public int cx;
+            public int cy;
+            public int flags;
+        }
+
+        public void SetLocation1(Rectangle rect) {
+            if (rectOff == null) {
+                Refresh.RefreshRect();
+                Refresh.RefreshOffset();
+            }
+            final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE | WinUser.SWP_NOCOPYBITS
+                    | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
+            // final int flagMini = flagNormal | WinUser.SWP_NOMOVE | WinUser.SWP_NOSIZE;
+
+            final int WM_WINDOWPOSCHANGED = 0x0047;
+            WINDOWPOS winpos = new WINDOWPOS();
+            winpos.hwnd = hWnd;
+            winpos.hwndInsertAfter = null;
+            winpos.flags = flagNormal;
+
+            winpos.x = rect.x + rectOff.x;
+            winpos.y = rect.y + rectOff.y;
+            winpos.cx = rect.width + rectOff.width;
+            winpos.cy = rect.height + rectOff.height;
+
+            if (!WinHelper.MyUser32Inst.PostMessage(hWnd, WM_WINDOWPOSCHANGED, null, winpos)) {
+                var errCode = WinHelper.Kernel32Inst.GetLastError();
+                if (errCode == 1400) // handle err, means the window closed, so ignore it
+                    return;
+                throw new Win32Exception(errCode);
+            }
+            Refresh.RefreshRect(rect);
         }
 
         public void DecorateEnable() {
@@ -169,6 +220,10 @@ public class Window {
             Refresh.RefreshRect();
             Refresh.RefreshOffset();
         }
+
+        public void SetCanLayout(boolean canLayout) {
+            Window.this.canLayout &= canLayout;
+        }
     }
 
     public class RefreshImpl {
@@ -187,6 +242,11 @@ public class Window {
             rect = new Rectangle(crect.left, crect.top, crect.right - crect.left, crect.bottom - crect.top);
         }
 
+        public void RefreshRect(Rectangle rect) {
+            // Window.this.rect = new Rectangle(rect.x, rect.y, rect.width, rect.height);
+            // RefreshRect();
+        }
+
         public void RefreshState() {
             if (WinHelper.MyUser32Inst.IsIconic(hWnd))
                 state = 1;
@@ -194,7 +254,7 @@ public class Window {
                 state = 2;
             else
                 state = 0;
-            if (WinHelper.MyUser32Inst.GetForegroundWindow() == hWnd)
+            if (hWnd.equals(WinHelper.MyUser32Inst.GetForegroundWindow()))
                 state |= 4;
         }
 
@@ -236,7 +296,7 @@ public class Window {
             return (state & 0x4) != 0;
         }
 
-        private boolean IsCloaked() {
+        public boolean IsCloaked() {
             return isCloaked;
         }
 

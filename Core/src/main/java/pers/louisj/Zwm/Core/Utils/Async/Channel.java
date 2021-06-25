@@ -1,6 +1,7 @@
 package pers.louisj.Zwm.Core.Utils.Async;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Channel<T> {
@@ -9,6 +10,7 @@ public class Channel<T> {
 
     protected T[] items;
     protected ReentrantLock lock = new ReentrantLock(true); // better performance in fair lock than unfair lock
+    protected Condition condition = lock.newCondition();
 
     int headIndex;
     int size;
@@ -24,31 +26,26 @@ public class Channel<T> {
     }
 
     public T take() {
-        // lock.lockInterruptibly();
+        T message = null;
         lock.lock();
-        while (size == 0) {
-            try {
-                lock.unlock();
-                synchronized (this) {
-                    wait();
-                }
-            } catch (InterruptedException e) {
-            }
-            lock.lock();
-        }
-        T message = items[headIndex];
-        if (++headIndex == items.length)
-            headIndex = 0;
-        size--;
-        lock.unlock();
-        synchronized (this) {
-            notify();
+        try {
+            while (size == 0)
+                condition.await();
+            message = items[headIndex];
+            if (++headIndex == items.length)
+                headIndex = 0;
+            size--;
+            condition.signal();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
         }
         return message;
     }
 
     public void put(T message) {
-        // lock.lockInterruptibly();
+        // lock.lock();
         if (!lock.tryLock()) {
             writeWaitTimes.incrementAndGet();
             lock.lock();
@@ -60,11 +57,9 @@ public class Channel<T> {
 
             items[realIndex(size)] = message;
             size++;
+            condition.signal();
         } finally {
             lock.unlock();
-        }
-        synchronized (this) {
-            notify();
         }
     }
 

@@ -7,12 +7,9 @@ import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Derived.ILayout;
 import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
-import pers.louisj.Zwm.Core.Global.Message.WindowMessage.WindowEvent;
-import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.GridLayout;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.Monitor;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouter;
 import pers.louisj.Zwm.Core.L2.Window.Window;
-import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 
 public class VirtualDesk {
     private static Logger logger = LogManager.getLogger("VirtualDesk");
@@ -20,15 +17,17 @@ public class VirtualDesk {
     private String name;
 
     public HashSet<Window> allWindows = new HashSet<>();
-    private Monitor monitor = null;
+    public Monitor monitor = null;
     private ILayout layout;
     public Window lastFocused = null;
 
     public VirtualDeskRouter router;
 
-    public ActionImpl Action = new ActionImpl();
 
-    public class ActionImpl {
+    public ActionLayoutImpl ActionLayout = new ActionLayoutImpl();
+    public ActionVDImpl ActionVD = new ActionVDImpl();
+
+    public class ActionLayoutImpl {
         public void TurnWindowLeft() {
             if (lastFocused == null || layout == null)
                 return;
@@ -70,6 +69,92 @@ public class VirtualDesk {
                 return;
             layout.WindowMoveResize(lastFocused);
         }
+
+        public void WindowToggleMinimize(Window window, boolean isMinimize) {
+            window.Refresh.RefreshState();
+            if (layout != null) {
+                layout.ToggleMinimize(window, isMinimize);
+            }
+            if (!isMinimize && window.Query.IsFocused())
+                lastFocused = window;
+        }
+
+        public void ResetLayout() {
+            if (layout != null) {
+                layout.ResetLayout();
+            }
+        }
+
+        public void ToggleTiling() {
+            if (lastFocused == null || layout == null)
+                return;
+            layout.WindowToggleLayout(lastFocused);
+        }
+    }
+
+    public class ActionVDImpl {
+        public void WindowAdd(Window window) {
+            logger.info("WindowAdd, {}", window);
+            allWindows.add(window);
+
+            if (monitor == null)
+                window.Action.Hide();
+            else
+                window.Action.ShowNoActive();
+
+            if (layout != null && window.Query.CanLayout()) {
+                layout.WindowAdd(window);
+            }
+        }
+
+        public void WindowRemove(Window window) {
+            logger.info("WindowRemove, {}", window);
+            allWindows.remove(window);
+
+            if (layout != null && window.Query.CanLayout()) {
+                layout.WindowRemove(window);
+                // window.Action.DecorateDisable();
+            }
+            if (lastFocused == window)
+                lastFocused = null;
+        }
+
+        public void Focus() {
+            if (lastFocused != null)
+                lastFocused.Action.Focus();
+        }
+
+        public void Enable(Monitor m) {
+            for (var w : allWindows) {
+                if (!w.Query.IsCloaked())
+                    w.Action.ShowNoActive();
+            }
+            monitor = m;
+            if (layout != null)
+                layout.Enable(m.GetWorkingRect());
+        }
+
+        public void Disable() {
+            monitor = null;
+            for (var w : allWindows)
+                w.Action.Hide();
+            if (layout != null)
+                layout.Disable();
+        }
+
+        public HashSet<Window> GetAllWindows() {
+            HashSet<Window> copy = new HashSet<Window>();
+            copy.addAll(allWindows);
+            return copy;
+        }
+
+        public HashSet<Window> GetLayoutWindows() {
+            if (layout == null)
+                return new HashSet<Window>();
+            HashSet<Window> copy = new HashSet<Window>();
+            copy.addAll(layout.GetWindows());
+            return copy;
+        }
     }
 
     public VirtualDesk(String name, VirtualDeskRouter router, ILayout layout) {
@@ -105,7 +190,7 @@ public class VirtualDesk {
     // return allWindows.iterator().next();
     // }
 
-    public void AddWindow(Window window) {
+    public void WindowAdd(Window window) {
         logger.info("AddWindow, {}", window);
         allWindows.add(window);
 
@@ -115,54 +200,33 @@ public class VirtualDesk {
             window.Action.ShowNoActive();
 
         if (layout != null && window.Query.CanLayout()) {
-            layout.AddWindow(window);
+            layout.WindowAdd(window);
             // window.Action.DecorateEnable();
         }
     }
 
-    public void AddWindow(Window window, boolean isLayout) {
+    public void WindowAdd(Window window, boolean isLayout) {
         logger.info("AddWindow, {}, {}", window, isLayout);
         allWindows.add(window);
 
         if (layout != null && isLayout) {
-            layout.AddWindow(window);
+            layout.WindowAdd(window);
             // window.Action.DecorateEnable();
         }
     }
 
-    public void RemoveWindow(Window window) {
+    public void WindowRemove(Window window) {
         logger.info("RemoveWindow, {}", window);
         allWindows.remove(window);
 
         if (layout != null && window.Query.CanLayout()) {
-            layout.RemoveWindow(window);
-            // window.Action.DecorateDisable();
+            layout.WindowRemove(window);
         }
         if (lastFocused == window)
             lastFocused = null;
     }
 
-    public void UpdateWindow(Window window, WindowEvent updateType) {
-        // layout.DoLayoutFull();
-        // if (type == WindowUpdateType.Foreground)
-        // _lastFocused = window;
-
-        // if (layout)
-        // synchronized (layoutWindows) {
-        // if (layoutWindows.contains(window))
-        // DoLayout();
-        // }
-    }
-
-    public void WindowToggleMinimize(Window window) {
-        if (layout != null) {
-            window.Refresh.RefreshState();
-            layout.ToggleMinimize(window);
-        }
-    }
-
     public void ResetLayout() {
-        // GetLayoutEngine().ResetPrimaryArea();
         if (layout != null) {
             layout.ResetLayout();
         }
@@ -287,50 +351,51 @@ public class VirtualDesk {
 
     public void Deal(VDMessage msg) {
         switch (msg.event) {
-            // TODO: Impl
-            case WindowUpdateState: {
-                WindowToggleMinimize((Window) msg.param);
-                break;
-            }
             case TurnWindowLeft: {
-                Action.TurnWindowLeft();
+                ActionLayout.TurnWindowLeft();
                 break;
             }
             case TurnWindowRight: {
-                Action.TurnWindowRight();
+                ActionLayout.TurnWindowRight();
                 break;
             }
             case TurnWindowUp: {
-                Action.TurnWindowUp();
+                ActionLayout.TurnWindowUp();
                 break;
             }
             case TurnWindowDown: {
-                Action.TurnWindowDown();
+                ActionLayout.TurnWindowDown();
                 break;
             }
-            // TODO: NOTTESTED
             case ResetLayout: {
-                ResetLayout();
+                ActionLayout.ResetLayout();
                 break;
             }
-            // TODO: NOTTESTED
             case AreaShrink: {
-                Action.AreaShrink();
+                ActionLayout.AreaShrink();
                 break;
             }
-            // TODO: NOTTESTED
             case AreaExpand: {
-                Action.AreaExpand();
+                ActionLayout.AreaExpand();
                 break;
             }
-            // TODO: NOTTESTED
             case WindowUpdateLocation: {
-                Action.WindowMoveResize();
+                ActionLayout.WindowMoveResize();
+                break;
+            }
+            case ToggleTiling: {
+                ActionLayout.ToggleTiling();
+                break;
+            }
+            case WindowMinimizeStart: {
+                ActionLayout.WindowToggleMinimize((Window) msg.param, true);
+                break;
+            }
+            case WindowMinimizeEnd: {
+                ActionLayout.WindowToggleMinimize((Window) msg.param, false);
                 break;
             }
             // TODO:
-            case ToggleTiling:
-            case DisplayInMonitor:
             default:
                 break;
         }

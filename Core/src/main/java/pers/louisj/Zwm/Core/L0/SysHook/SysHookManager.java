@@ -10,6 +10,7 @@ import com.sun.jna.platform.win32.WinDef.DWORD;
 import com.sun.jna.platform.win32.WinDef.HMODULE;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.LONG;
+import com.sun.jna.platform.win32.WinDef.POINT;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.platform.win32.WinUser.WinEventProc;
 import com.sun.jna.platform.win32.WinUser.HHOOK;
@@ -21,33 +22,22 @@ import com.sun.jna.platform.win32.WinUser.HHOOK;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Global.Message.Message;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
 import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDEvent;
 import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
-import pers.louisj.Zwm.Core.Global.Message.WindowMessage.WindowEvent;
-import pers.louisj.Zwm.Core.Global.Message.WindowMessage.WindowMessage;
 import pers.louisj.Zwm.Core.L2.Window.Window;
-import pers.louisj.Zwm.Core.L2.Window.Window.QueryStatic;
-import pers.louisj.Zwm.Core.Utils.Async.Channel;
-import pers.louisj.Zwm.Core.Utils.Async.Channel2;
+// import pers.louisj.Zwm.Core.Utils.Async.Channel;
+import pers.louisj.Zwm.Core.Utils.Async.ChannelList;
+import pers.louisj.Zwm.Core.Utils.Types.Point;
 import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 public class SysHookManager {
-    private class HookMessage {
-        public HWND hwnd;
-        public WindowEvent event;
-
-        public HookMessage(HWND hwnd, WindowEvent event) {
-            this.hwnd = hwnd;
-            this.event = event;
-        }
-    }
-
     private static final int EVENT_OBJECT_DESTROY = 0x8001;
     private static final int EVENT_OBJECT_SHOW = 0x8002;
+    private static final int EVENT_OBJECT_HIDE = 0x8003;
 
     private static final int EVENT_OBJECT_CLOAKED = 0x8017;
     private static final int EVENT_OBJECT_UNCLOAKED = 0x8018;
@@ -66,97 +56,125 @@ public class SysHookManager {
 
     private static Logger logger = LogManager.getLogger("WindowHookManager");
 
-    public List<Channel<Message>> eventChans = new ArrayList<>();
+    // public List<Channel<Message>> eventChans = new ArrayList<>();
+    public ChannelList<Message> eventChans = new ChannelList<>();
 
     public Map<HWND, Window> windows = new HashMap<>();
 
     private List<HANDLE> hooks = new ArrayList<>();
     private List<HHOOK> hookexs = new ArrayList<>();
 
-    private Thread messageLoop = new MessageLoop();
-    private Channel<HookMessage> channelIn = new Channel2<>();
+    protected Context context;
 
-    public SysHookManager() {
+    public SysHookManager(Context context) {
+        this.context = context;
     }
 
     public void Init() {
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_SHOW, new HMODULE(),
-                windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, new HMODULE(),
-                windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_NAMECHANGE,
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE,
                 new HMODULE(), windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MINIMIZESTART, EVENT_SYSTEM_MINIMIZEEND,
-                new HMODULE(), windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MOVESIZEEND, EVENT_SYSTEM_MOVESIZEEND,
-                new HMODULE(), windowHook, 0, 0, 0));
-        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
-                new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_CLOAKED,
+                EVENT_OBJECT_UNCLOAKED, new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_NAMECHANGE,
+                EVENT_OBJECT_NAMECHANGE, new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MINIMIZESTART,
+                EVENT_SYSTEM_MINIMIZEEND, new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_MOVESIZEEND,
+                EVENT_SYSTEM_MOVESIZEEND, new HMODULE(), windowHook, 0, 0, 0));
+        hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
+                EVENT_SYSTEM_FOREGROUND, new HMODULE(), windowHook, 0, 0, 0));
 
         // hookexs.add(WinHelper.MyUser32Inst.SetWindowsHookEx(WH_MOUSE_LL, mouseHook,
         // new HMODULE(), 0));
 
+        List<HWND> hwnds = new ArrayList<>();
         WinHelper.MyUser32Inst.EnumWindows((hwnd, param) -> {
-            channelIn.put(new HookMessage(hwnd, WindowEvent.Add));
+            hwnds.add(hwnd);
             return true;
         }, null);
+        WindowRegisterInit(hwnds);
     }
 
-    public void Start() {
-        messageLoop.start();
-    }
+    public void Start() {}
 
     public void Defer() {
         logger.info("WindowHookManager Defer Start");
-        channelIn.put(null);
         for (var h : hooks)
             WinHelper.MyUser32Inst.UnhookWinEvent(h);
         for (var h : hookexs)
             WinHelper.MyUser32Inst.UnhookWindowsHookEx(h);
 
-        try {
-            messageLoop.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         logger.info("WindowHookManager Defer End");
     }
 
     public WinEventProc windowHook = new WinEventProc() {
-        public void callback(HANDLE hWinEventHook, DWORD event, HWND hwnd, LONG idObject, LONG idChild,
-                DWORD dwEventThread, DWORD dwmsEventTime) {
+        public void callback(HANDLE hWinEventHook, DWORD event, HWND hwnd, LONG idObject,
+                LONG idChild, DWORD dwEventThread, DWORD dwmsEventTime) {
             // logger.info("WindowHook - , {}", Integer.toHexString(event.intValue()));
             if (EventWindowIsValid(idChild, idObject, hwnd)) {
                 switch (event.intValue()) {
                     case EVENT_OBJECT_SHOW:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.Add));
+                        WindowRegister(hwnd);
                         break;
                     case EVENT_OBJECT_DESTROY:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.Remove));
+                        WindowUnregister(hwnd);
                         break;
-                    case EVENT_OBJECT_CLOAKED:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.Hide));
+                    case EVENT_OBJECT_HIDE: {
+                        var window = windows.get(hwnd);
+                        logger.error("WinEventProc, event = EVENT_OBJECT_HIDE, window = {}",
+                                window);
                         break;
-                    case EVENT_OBJECT_UNCLOAKED:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.Show));
+                    }
+                    // TODO: For Debug, Never See
+                    case EVENT_OBJECT_CLOAKED: {
+                        var window = windows.get(hwnd);
+                        logger.error("WinEventProc, event = EVENT_OBJECT_CLOAKED, window = {}",
+                                window);
                         break;
-                    case EVENT_SYSTEM_MINIMIZESTART:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.MinimizeStart));
+                    }
+                    case EVENT_OBJECT_UNCLOAKED: {
+                        var window = windows.get(hwnd);
+                        logger.error("WinEventProc, event = EVENT_OBJECT_UNCLOAKED, window = {}",
+                                window);
                         break;
-                    case EVENT_SYSTEM_MINIMIZEEND:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.MinimizeEnd));
+                    }
+                    case EVENT_SYSTEM_MINIMIZESTART: {
+                        var window = windows.get(hwnd);
+                        if (window != null)
+                            eventChans.put(new VDMessage(VDEvent.WindowMinimizeStart, window));
                         break;
-                    case EVENT_SYSTEM_FOREGROUND:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.Foreground));
+                    }
+                    case EVENT_SYSTEM_MINIMIZEEND: {
+                        var window = windows.get(hwnd);
+                        if (window != null)
+                            eventChans.put(new VDMessage(VDEvent.WindowMinimizeEnd, window));
                         break;
-                    // case EVENT_SYSTEM_MOVESIZESTART:
-                    // StartWindowMove(hwnd);
-                    // break;
-                    case EVENT_SYSTEM_MOVESIZEEND:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.MoveEnd));
+                    }
+                    case EVENT_SYSTEM_FOREGROUND: {
+                        var window = windows.get(hwnd);
+                        if (window != null)
+                            eventChans.put(new VDManMessage(VDManEvent.WindowForeground,
+                                    windows.get(hwnd)));
+                        else {
+                            POINT p2p = new POINT();
+                            WinHelper.MyUser32Inst.GetCursorPos(p2p);
+                            eventChans.put(new VDManMessage(VDManEvent.MonitorForeground,
+                                    new Point(p2p.x, p2p.y)));
+                        }
                         break;
+                    }
+                    case EVENT_SYSTEM_MOVESIZEEND: {
+                        var window = windows.get(hwnd);
+                        if (window != null) {
+                            eventChans.put(new VDMessage(VDEvent.WindowUpdateLocation, window));
+                        }
+                        break;
+                    }
                     case EVENT_OBJECT_NAMECHANGE:
-                        channelIn.put(new HookMessage(hwnd, WindowEvent.TitleChange));
+                        var window = windows.get(hwnd);
+                        if (window != null) {
+                            eventChans.put(new VDManMessage(VDManEvent.WindowTitleChange, window));
+                        }
                         break;
                 }
             }
@@ -170,64 +188,46 @@ public class SysHookManager {
                 && Pointer.nativeValue(hwnd.getPointer()) != 0;
     }
 
-    private void RegisterWindow(HWND hwnd) {
+    private void WindowRegisterInit(List<HWND> hwnds) {
+        logger.info("WindowRegisterInit, hwnds = {}", hwnds);
+        List<Window> registered = new ArrayList<>();
+        for (var hwnd : hwnds) {
+            if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
+                int id = Window.QueryStatic.GetWindowPid(hwnd);
+
+                var window = new Window(hwnd, id);
+                if (context.filterVirtualDesk.CheckMatch(window)) {
+                    logger.info("WindowRegister, Ignored, {}", window);
+                    continue;
+                }
+                windows.put(hwnd, window);
+                registered.add(window);
+            }
+        }
+        eventChans.put(new VDManMessage(VDManEvent.WindowAddInit, registered));
+    }
+
+    private void WindowRegister(HWND hwnd) {
+        logger.info("WindowRegister, hwnd = {}", hwnd);
         if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
             int id = Window.QueryStatic.GetWindowPid(hwnd);
-            logger.info("RegisterWindow, hwnd = {}, pid = {}", hwnd, id);
 
-            if (id == 0)
-                return;
             var window = new Window(hwnd, id);
+            if (context.filterVirtualDesk.CheckMatch(window)) {
+                logger.info("WindowRegister, Ignored, {}", window);
+                return;
+            }
             windows.put(hwnd, window);
 
-            for (var e : eventChans) {
-                e.put(new WindowMessage(WindowEvent.Add, window));
-                e.put(new VDManMessage(VDManEvent.WindowAdd, window));
-            }
+            eventChans.put(new VDManMessage(VDManEvent.WindowAdd, window));
         }
     }
 
-    private void UnregisterWindow(HWND hwnd) {
+    private void WindowUnregister(HWND hwnd) {
         var window = windows.remove(hwnd);
         if (window != null) {
-            logger.info("UnregisterWindow, window = {}", window);
-
-            for (var e : eventChans) {
-                e.put(new WindowMessage(WindowEvent.Remove, window));
-                e.put(new VDManMessage(VDManEvent.WindowRemove, window));
-            }
-        }
-    }
-
-    private void UpdateWindow(HWND hwnd, WindowEvent updateType) {
-        var window = windows.get(hwnd);
-        if (window != null) {
-            logger.info("UpdateWindow, window = {}, updateType = {}", window, updateType);
-            for (var e : eventChans) {
-                e.put(new WindowMessage(updateType, window));
-            }
-        }
-    }
-
-    private void WindowForeground(HWND hwnd) {
-        for (var e : eventChans) {
-            e.put(new VDManMessage(VDManEvent.Foreground, windows.get(hwnd)));
-        }
-    }
-
-    private void WindowToggleMinimize(HWND hwnd) {
-        for (var e : eventChans) {
-            e.put(new VDMessage(VDEvent.WindowUpdateState, windows.get(hwnd)));
-        }
-    }
-
-    private void EndWindowMove(HWND hwnd) {
-        var window = windows.get(hwnd);
-        logger.info("EndWindowMove, {}", window);
-        if (window != null) {
-            for (var e : eventChans) {
-                e.put(new VDMessage(VDEvent.WindowUpdateLocation, window));
-            }
+            logger.info("WindowUnregister, window = {}", window);
+            eventChans.put(new VDManMessage(VDManEvent.WindowRemove, window));
         }
     }
 
@@ -244,45 +244,4 @@ public class SysHookManager {
     // }
     // };
 
-    private class MessageLoop extends Thread {
-        public MessageLoop() {
-            super();
-            setName("WinHookMan Thread");
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                HookMessage msg = channelIn.take();
-                if (msg == null) {
-                    // Exit
-                    return;
-                }
-                switch (msg.event) {
-                    case Add:
-                        RegisterWindow(msg.hwnd);
-                        break;
-                    case Remove:
-                        UnregisterWindow(msg.hwnd);
-                        break;
-                    case MoveEnd:
-                        EndWindowMove(msg.hwnd);
-                        break;
-                    case Foreground:
-                        WindowForeground(msg.hwnd);
-                        break;
-                    case MinimizeStart:
-                    case MinimizeEnd:
-                        WindowToggleMinimize(msg.hwnd);
-                        break;
-                    case Show:
-                    case Hide:
-                        // case MoveStart:
-                    case Move:
-                        UpdateWindow(msg.hwnd, msg.event);
-                        break;
-                }
-            }
-        }
-    }
 }

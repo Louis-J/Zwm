@@ -14,28 +14,20 @@ public class VirtualDeskFilter extends WindowFilter {
 
     @Override
     public void DefaultConfig() {
-        MatchClasses(new ArrayList<>(Arrays.asList(new String[] { "TaskManagerWindow", "MSCTFIME UI",
-                "SHELLDLL_DefView", "LockScreenBackstopFrame", "Shell_TrayWnd", "WorkerW", "Progman", })));
+        MatchClasses(new ArrayList<>(Arrays.asList(new String[] {"TaskManagerWindow", "MSCTFIME UI",
+                "SHELLDLL_DefView", "LockScreenBackstopFrame", "WorkerW", "Progman",})));
 
-        MatchClass("ApplicationFrameWindow"); // 设置, Microsoft Store, Realtek Audio Console
-        MatchClass("Windows.UI.Core.CoreWindow");
-        MatchClass("NotifyIconOverflowWindow"); // ?
-        MatchClass("tooltips_class32"); // ?
-        MatchClass("SunAwtWindow"); // prevents flickering
-        MatchClass("MultitaskingViewFrame"); // Alt Tab Window
-        MatchClass("TaskListThumbnailWnd"); // TaskList in Task Bar
-        MatchClass("SysShadow"); // Some Shadow Window
-        MatchClass("VirtualConsoleClass"); // Conemu
-        MatchClass("OperationStatusWindow"); // explorer "file is in using" window
-        
+        MatchClass("VirtualConsoleClass"); // -----App: Conemu
 
-        MatchClass("7ttRefreshSyncWnd"); // App: 7+ taskbar tweaker
-        // IgnoreName("\\bin\\java.exe");
-        
+        // For Debug
+        MatchClass("MozillaWindowClass"); // Ignore Firefox for Debug
         MatchClass("Chrome_WidgetWin_1"); // Ignore Visual Studio Code for Debug
+        MatchClass("SunAwtFrame"); // Ignore IDEA for Debug
 
-        MatchNames(new ArrayList<>(Arrays.asList(new String[] { "SearchUI", "ShellExperienceHost", "LockApp",
-                "PeopleExperienceHost", "StartMenuExperienceHost", "SearchApp", "ScreenClippingHost", })));
+        MatchName("\\bin\\java.exe");
+        MatchNames(new ArrayList<>(Arrays.asList(
+                new String[] {"SearchUI", "ShellExperienceHost", "LockApp", "PeopleExperienceHost",
+                        "StartMenuExperienceHost", "SearchApp", "ScreenClippingHost",})));
     }
 
     @Override

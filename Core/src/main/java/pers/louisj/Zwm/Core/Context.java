@@ -4,7 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.L0.KeyBind.KeybindManager;
-import pers.louisj.Zwm.Core.L0.MsgLoop.MsgLoop;
+import pers.louisj.Zwm.Core.L0.MsgLoop.IMsgLoop;
+import pers.louisj.Zwm.Core.L0.MsgLoop.MsgLoopQT;
 import pers.louisj.Zwm.Core.L0.SysHook.SysHookManager;
 import pers.louisj.Zwm.Core.L1.MainLoop;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskFilter;
@@ -15,16 +16,15 @@ import pers.louisj.Zwm.Core.Utils.Async.Channel;
 public class Context {
     static Logger logger = LogManager.getLogger("Context");
 
-    public PluginManager pluginMan = new PluginManager();
+    public PluginManager pluginMan = new PluginManager(this);
     public VirtualDeskManager vdMan = new VirtualDeskManager(this);
+    public VirtualDeskFilter filterVirtualDesk = new VirtualDeskFilter();
 
     public MainLoop mainloop = new MainLoop(vdMan);
 
     public KeybindManager keyBindMan = new KeybindManager(this);
-    public SysHookManager hookMan = new SysHookManager();
-    private MsgLoop msgloop = new MsgLoop(mainloop.channelIn);
-
-    // public VirtualDeskFilter vdFilter = new VirtualDeskFilter();
+    public SysHookManager hookMan = new SysHookManager(this);
+    public IMsgLoop msgloop = new MsgLoopQT(mainloop.channelIn);
 
     public Context() {
         hookMan.eventChans.add(mainloop.channelIn);
@@ -45,12 +45,13 @@ public class Context {
         pluginMan.Defer();
         hookMan.Defer();
         mainloop.Defer();
+        msgloop.Defer();
         logger.info(Channel.writeWaitTimes.get());
     }
 
     public void DefaultConfig() {
-        // keyBindMan.DefaultConfig();
-        vdMan.filterIgnore.DefaultConfig();
+        keyBindMan.DefaultConfig();
+        filterVirtualDesk.DefaultConfig();
 
         // SystemTray.AddToContextMenu("enable/disable workspacer", () => Enabled =
         // !Enabled);
@@ -72,33 +73,33 @@ public class Context {
 
     // TODO:
     // private void SaveState() {
-    //     // var filePath = FileHelper.GetStateFilePath();
-    //     // var json = JsonConvert.SerializeObject(GetState());
+    // // var filePath = FileHelper.GetStateFilePath();
+    // // var json = JsonConvert.SerializeObject(GetState());
 
-    //     // File.WriteAllText(filePath, json);
+    // // File.WriteAllText(filePath, json);
     // }
 
     // TODO:
     // public VirtualDeskState LoadState() {
-    //     // var filePath = FileHelper.GetStateFilePath();
+    // // var filePath = FileHelper.GetStateFilePath();
 
-    //     // if (!File.Exists(filePath))
-    //     // {
-    //     // return null;
-    //     // }
-    //     // var json = File.ReadAllText(filePath);
-    //     // var state = JsonConvert.DeserializeObject<WorkspacerState>(json);
-    //     // File.Delete(filePath);
-    //     // return state;
-    //     return null;
+    // // if (!File.Exists(filePath))
+    // // {
+    // // return null;
+    // // }
+    // // var json = File.ReadAllText(filePath);
+    // // var state = JsonConvert.DeserializeObject<WorkspacerState>(json);
+    // // File.Delete(filePath);
+    // // return state;
+    // return null;
     // }
 
     // TODO:
     // private VirtualDeskState GetState() {
-    //     // return new WorkspacerState() {
-    //     // WorkspaceState = Workspaces.GetState()
-    //     // };
-    //     return null;
+    // // return new WorkspacerState() {
+    // // WorkspaceState = Workspaces.GetState()
+    // // };
+    // return null;
     // }
 
 

@@ -2,10 +2,14 @@ package pers.louisj.Zwm.Core.Derived;
 
 import com.google.gson.Gson;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import pers.louisj.Zwm.Core.Context;
 
 public interface IPlugin {
     public static Gson gson = new Gson();
+    public static Logger logger = LogManager.getLogger("Plugin");
 
     public void Init(Context context);
 

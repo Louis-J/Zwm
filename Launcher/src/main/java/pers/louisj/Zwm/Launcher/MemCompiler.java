@@ -23,7 +23,6 @@ import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.tools.FileObject;
@@ -51,15 +50,6 @@ public class MemCompiler {
     public Map<String, ByteArrayOutputStream> GetClasses() {
         return byteCodeForClasses;
     }
-
-    // @Override
-    // public Class<?> findClass(String name) throws ClassNotFoundException {
-    // ByteArrayOutputStream byteCode = byteCodeForClasses.get(name);
-    // if (byteCode == null) {
-    // throw new ClassNotFoundException(name);
-    // }
-    // return defineClass(name, byteCode.toByteArray(), 0, byteCode.size());
-    // }
 
     public boolean Compile(String className, String sourceCode, List<String> options, Writer writer) {
         JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();

@@ -275,7 +275,7 @@ public class KeybindManager {
                     () -> channelIn.put(new VDManMessage(VDManEvent.SwitchToVD, obji)));
             Register("Move Focused Window to Virtual Desk " + stri,
                     (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL), (byte) (KeyCode.VK_1 + i),
-                    () -> channelIn.put(new VDManMessage(VDManEvent.MoveWindowToVD, obji)));
+                    () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, obji)));
         }
 
         Register("Switch Focused Monitor to Previous Virtual Desk",
@@ -288,11 +288,11 @@ public class KeybindManager {
 
         Register("Move Focused Window to Previous Virtual Desk",
                 (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN), KeyCode.VK_LEFT,
-                () -> channelIn.put(new VDManMessage(VDManEvent.MoveWindowToVD, Integer.valueOf(-1))));
+                () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, Integer.valueOf(-1))));
 
         Register("Move Focused Window to Next Virtual Desk",
                 (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN), KeyCode.VK_RIGHT,
-                () -> channelIn.put(new VDManMessage(VDManEvent.MoveWindowToVD, Integer.valueOf(-2))));
+                () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, Integer.valueOf(-2))));
 
         Register("Reset Layout of Focused Virtual Desk", KeyCode.FuncKey.LALT, KeyCode.VK_R,
                 () -> channelIn.put(new VDMessage(VDEvent.ResetLayout, null)));

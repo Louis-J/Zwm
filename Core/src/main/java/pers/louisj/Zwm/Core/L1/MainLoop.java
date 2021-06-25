@@ -1,5 +1,7 @@
 package pers.louisj.Zwm.Core.L1;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,13 +10,17 @@ import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
 import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskManager;
 import pers.louisj.Zwm.Core.Utils.Async.Channel;
-import pers.louisj.Zwm.Core.Utils.Async.Channel2;
 
 public class MainLoop extends Thread {
+    public interface MessageHook {
+        public boolean Invoke(Message msg);
+    };
+
     public static Logger logger = LogManager.getLogger("MainLoop");
 
     private final VirtualDeskManager virtualDeskManager;
-    public Channel<Message> channelIn = new Channel2<>(1024);
+    public Channel<Message> channelIn = new Channel<>(1024);
+    public List<MessageHook> hooks = new ArrayList<>();
 
     public MainLoop(VirtualDeskManager virtualDeskManager) {
         super();
@@ -48,14 +54,19 @@ public class MainLoop extends Thread {
                 // Exit
                 virtualDeskManager.Exit();
                 return;
-            } else if (msg instanceof VDManMessage) {
+            }
+            for (var h : hooks) {
+                if (h.Invoke(msg) == true)
+                    continue;
+            }
+            if (msg instanceof VDManMessage) {
                 var wmsg = (VDManMessage) msg;
                 logger.info("MainLoop, VDManMessage, {}, {}", wmsg.event, wmsg.param);
                 virtualDeskManager.Deal(wmsg);
             } else if (msg instanceof VDMessage) {
                 var vdmsg = (VDMessage) msg;
-                logger.info("MainLoop, VDMessage, {}, {}, focusedIndex = {}", vdmsg.event, vdmsg.param, virtualDeskManager.focusedIndex);
-                virtualDeskManager.GetFocusdVD().Deal(vdmsg);
+                logger.info("MainLoop, VDMessage, {}, {}", vdmsg.event, vdmsg.param);
+                virtualDeskManager.Query.GetFocusedVD().Deal(vdmsg);
             } else {
                 logger.info("MainLoop, UnknownMessage, {}", msg);
             }

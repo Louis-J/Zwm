@@ -44,56 +44,50 @@
         <File name="Context" fileName="logs\${sys:Time4File}\Context.log">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
         </File>
+        <File name="Plugin" fileName="logs\${sys:Time4File}\Plugin.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </File>
     </Appenders>
 
     <Loggers>
         <Logger name="Main" level="trace" additivity="true">
             <AppenderRef ref="Main" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="KeybindManager" level="trace" additivity="true">
             <AppenderRef ref="KeybindManager" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="PluginManager" level="trace" additivity="true">
             <AppenderRef ref="PluginManager" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="VirtualDesk" level="trace" additivity="true">
             <AppenderRef ref="VirtualDesk" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="VirtualDeskManager" level="trace" additivity="true">
             <AppenderRef ref="VirtualDeskManager" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="Window" level="trace" additivity="true">
             <AppenderRef ref="Window" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="WindowHookManager" level="trace" additivity="true">
             <AppenderRef ref="WindowHookManager" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="VirtualDeskFilter" level="trace" additivity="true">
             <AppenderRef ref="VirtualDeskFilter" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="VirtualDeskRouter" level="trace" additivity="true">
             <AppenderRef ref="VirtualDeskRouter" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="ILayout" level="trace" additivity="true">
             <AppenderRef ref="ILayout" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="LayoutFilter" level="trace" additivity="true">
             <AppenderRef ref="LayoutFilter" />
-            <!-- <AppenderRef ref="Console" /> -->
         </Logger>
         <Logger name="Context" level="trace" additivity="true">
             <AppenderRef ref="Context" />
-            <!-- <AppenderRef ref="Console" /> -->
+        </Logger>
+        <Logger name="Plugin" level="trace" additivity="true">
+            <AppenderRef ref="Plugin" />
         </Logger>
         
         <Root level="info">

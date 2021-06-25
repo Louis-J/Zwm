@@ -17,9 +17,11 @@ public interface ILayout {
 
     public void Disable();
 
-    public void AddWindow(Window window);
+    public boolean WindowAdd(Window window);
 
-    public boolean RemoveWindow(Window window);
+    public boolean WindowRemove(Window window);
+
+    public boolean WindowToggleLayout(Window window);
 
     public void AreaExpand(Window window);
 
@@ -33,7 +35,7 @@ public interface ILayout {
 
     public void ShiftDown(Window window);
 
-    public void ToggleMinimize(Window window);
+    public void ToggleMinimize(Window window, boolean isMinimize);
 
     public void ResetLayout();
 
