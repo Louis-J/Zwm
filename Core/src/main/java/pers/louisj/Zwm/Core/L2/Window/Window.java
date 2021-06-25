@@ -14,7 +14,6 @@ import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinDef.WPARAM;
 import com.sun.jna.platform.win32.WinDef.LPARAM;
 import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.Structure;
 
@@ -134,7 +133,6 @@ public class Window {
                     return;
                 throw new Win32Exception(errCode);
             }
-            Refresh.RefreshRect(rect);
         }
 
         @Structure.FieldOrder({ "cbSize", "rcMonitor", "rcWork", "dwFlags", "szDevice" })
@@ -174,12 +172,11 @@ public class Window {
                     return;
                 throw new Win32Exception(errCode);
             }
-            Refresh.RefreshRect(rect);
         }
 
         public void DecorateEnable() {
             final int WS_CAPTION = 0x00C00000;
-            final int WS_THICKFRAME = 0x00040000;
+            // final int WS_THICKFRAME = 0x00040000;
 
             // int newWinStyle = winStyle & ~WS_CAPTION & ~WS_THICKFRAME;
             int newWinStyle = winStyle & ~WS_CAPTION;
@@ -254,8 +251,6 @@ public class Window {
                 state = 2;
             else
                 state = 0;
-            if (hWnd.equals(WinHelper.MyUser32Inst.GetForegroundWindow()))
-                state |= 4;
         }
 
         public void RefreshOffset() {
@@ -290,10 +285,9 @@ public class Window {
         }
     }
 
-    // TODO:
     public class QueryImpl {
         public boolean IsFocused() {
-            return (state & 0x4) != 0;
+            return hWnd.equals(WinHelper.MyUser32Inst.GetForegroundWindow());
         }
 
         public boolean IsCloaked() {
@@ -301,11 +295,11 @@ public class Window {
         }
 
         public boolean IsMinimized() {
-            return (state & 0x3) == 1;
+            return state == 1;
         }
 
         public boolean IsMaximized() {
-            return (state & 0x3) == 2;
+            return state == 2;
         }
 
         public boolean CanLayout() {
@@ -323,6 +317,14 @@ public class Window {
 
         public Rectangle GetRect() {
             return rect;
+        }
+
+        public int GetWindowStyle() {
+            return winStyle;
+        }
+
+        public int GetWindowStyleEx() {
+            return winStyleEx;
         }
     }
 
@@ -415,7 +417,7 @@ public class Window {
 
     @Override
     public String toString() {
-        return hWnd.toString() + '|' + windowTitle + '|' + windowClass + '|' + processName;
+        return "" + Pointer.nativeValue(hWnd.getPointer()) + '|' + processId + '|' + windowTitle + '|' + windowClass + '|' + processName;
     }
 
     // the handle is the only const val there, other should be mutable

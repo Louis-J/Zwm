@@ -502,7 +502,6 @@ class WindowGrid {
     }
 
     public GridPosi ChangeLoc(WindowColumn wc, WindowUnit wu, float xf, float yf) {
-        var rect = wu.window.Query.GetRect();
         var c = begin;
         for (; c.percentShowTo < xf; c = c.next) {
         }

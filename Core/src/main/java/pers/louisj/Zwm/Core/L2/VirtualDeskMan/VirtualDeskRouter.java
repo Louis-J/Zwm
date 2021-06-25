@@ -6,18 +6,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Global.WindowFilter;
-import pers.louisj.Zwm.Core.L2.VirtualDesk.VirtualDesk;
-import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouterMan;
 
 public class VirtualDeskRouter extends WindowFilter {
 
     private static Logger logger = LogManager.getLogger("VirtualDeskRouter");
-    private VirtualDeskRouterMan vdr;
-
-    public VirtualDeskRouter(VirtualDeskRouterMan vdr) {
-        this.vdr = vdr;
-    }
-
     @Override
     public void DefaultConfig() {
     }
