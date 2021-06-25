@@ -10,17 +10,17 @@
 
 # Feature
 + [x] Virtual Desktop in Windows OS(use it not only in win 10)
-  + [ ] Multiple Monitor support
+  + [x] Multiple Monitor support
 
 + [x] Auto-Tiling!
   + [x] A Basic Grid Layout
-  + [ ] Float mode
+  + [x] Float mode
   + [ ] More Layouts...
 
-+ [ ] Plug-in support
-  + [x] SystemTray Plug-in
++ [x] Plug-in support
+  + [ ] SystemTray Plug-in
   + [ ] Smart Gap
-  + [ ] i3-like Bar
+  + [x] i3-like Bar
   + [ ] More Plug-in...
 
 + [x] Very easy to use and customize
@@ -28,59 +28,102 @@
   + [x] Or change the world in config.java(layouts, keybinds, ...)
 
 # TODO
-+ float mode
-+ multi-monitor support
-+ an i3-like Bar
 + solve bugs in current grid layout
 + solve bugs in current systemtray plug-in
-+ package a simple jre environment
 + release the first version
 
 # Thanks to: 
-https://github.com/sonicmouse/ProcCmdLine
 
-## 动态编译参考:
+## qtjambi
 
-https://github.com/apache/storm
+the qt binding for java
 
-storm/sql/storm-sql-core/src/jvm/org/apache/storm/sql/javac/CompilingClassLoader.java
+[qtjambi](https://github.com/OmixVisualization/qtjambi)
 
+[License.GPLv3](https://github.com/OmixVisualization/qtjambi/blob/master/LICENSE.GPLv3)
+
+[License.LGPLv21](https://github.com/OmixVisualization/qtjambi/blob/master/LICENSE.LGPLv21)
+
+my patched version with nativeFilter feature:
+[qtjambi-with-nativeFilter](https://github.com/Louis-J/qtjambi-with-nativeFilter)
+
+## aho-corasick
+
+a java implementation of the Aho-Corasick algorithm
+
+used in my filters.
+
+[aho-corasick](https://github.com/robert-bor/aho-corasick)
+
+[License](https://github.com/robert-bor/aho-corasick/blob/master/LICENSE.md)
+
+## workspacer
+
+a tiling window manager for Windows 10
+
+i read the source code and it inspired me a lot
+
+[workspacer](https://github.com/rickbutton/workspacer)
+
+[License](https://github.com/rickbutton/workspacer/blob/master/LICENSE)
+
+## storm
+
+i used the source code of the [CompilingClassLoader.java](https://github.com/apache/storm/blob/master/sql/storm-sql-core/src/jvm/org/apache/storm/sql/javac/CompilingClassLoader.java)
+
+[storm](https://github.com/apache/storm)
+
+[License](https://github.com/apache/storm/blob/master/LICENSE)
+
+## Grid-Tiling-Kwin
+
+a kwin script that automatically tiles windows
+
+i use it in my manjaro KDE. i like the grid layout logic.
+
+[Grid-Tiling-Kwin](https://github.com/lingtjien/Grid-Tiling-Kwin)
 
 # Why do you use java?
-I'm a c++ boy and it's slow and a little boring to struggle with bugs in c++. I also want to try and study a new language.
+I'm a "c++ boy" and it's slow to compile and a little boring to struggle with bugs in c++. I also want to try and study a new language.
 
-# Default ShortCuts
+# Default Config
 
-"Exit The Program", LALT, Q
+## Default Virtual Desk Config
 
-"Debug VD info", LALT, X
+4 Virtual Desk, the layouts are grid layout
 
-"Turn Focused Window Left", LALT, LEFT, 
+## Default ShortCuts
 
-"Turn Focused Window Right", LALT, RIGHT, 
+"Exit The Program": left Alt, Q
 
-"Turn Focused Window Up", LALT, UP, 
+"Debug VD info": left Alt, X
 
-"Turn Focused Window Down", LALT, DOWN, 
+"Turn Focused Window Left": left Alt, left Arrow, 
 
-"Close Focused Window", LALT, ESCAPE, 
+"Turn Focused Window Right": left Alt, right Arrow, 
 
-"Minimize Focused Window", LALT, A, 
+"Turn Focused Window Up": left Alt, up Arrow, 
 
-"Switch Focused Monitor to Virtual Desk x(1-9)" LALT, 1-9, 
+"Turn Focused Window Down": left Alt, down Arrow, 
 
-"Move Focused Window to Virtual Desk x(1-9)", LALT | LCONTROL 1-9
+"Close Focused Window": left Alt, Esc, 
 
-"Switch Focused Monitor to Previous Virtual Desk", LALT | LCONTROL, LEFT, 
+"Minimize Focused Window": left Alt, A, 
 
-"Switch Focused Monitor to Next Virtual Desk", LALT | LCONTROL, RIGHT, 
+"Switch Focused Monitor to Virtual Desk x(1-9)": left Alt, 1-9, 
 
-"Move Focused Window to Previous Virtual Desk", LALT | LCONTROL | LWIN, LEFT, 
+"Move Focused Window to Virtual Desk x(1-9)": left Alt | left Ctrl, 1-9
 
-"Move Focused Window to Next Virtual Desk", LALT | LCONTROL | LWIN, RIGHT, 
+"Switch Focused Monitor to Previous Virtual Desk": left Alt | left Ctrl, left Arrow, 
 
-"Reset Layout of Focused Virtual Desk", LALT, R, 
+"Switch Focused Monitor to Next Virtual Desk": left Alt | left Ctrl, right Arrow, 
 
-"Expand the Area of Focused Window", LALT, +, 
+"Move Focused Window to Previous Virtual Desk": left Alt | left Ctrl | left Win, left Arrow, 
 
-"Shrink the Area of Focused Window", LALT, -, 
+"Move Focused Window to Next Virtual Desk": left Alt | left Ctrl | left Win, right Arrow, 
+
+"Reset Layout of Focused Virtual Desk": left Alt, R, 
+
+"Expand the Area of Focused Window": left Alt, +, 
+
+"Shrink the Area of Focused Window": left Alt, -, 

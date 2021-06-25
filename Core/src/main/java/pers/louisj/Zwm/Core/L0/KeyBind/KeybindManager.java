@@ -56,8 +56,10 @@ public class KeybindManager {
     public void Start() {
         logger.info("The KeybindMan Is Registed");
         HMODULE hModule = WinHelper.Kernel32Inst.GetModuleHandle(null);
-        hHookKey = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_KEYBOARD_LL, keyHook, hModule, 0);
-        hHookMouse = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_MOUSE_LL, mouseHook, hModule, 0);
+        hHookKey = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_KEYBOARD_LL, keyHook,
+                hModule, 0);
+        hHookMouse = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_MOUSE_LL, mouseHook,
+                hModule, 0);
     }
 
     public void Defer() {
@@ -209,7 +211,8 @@ public class KeybindManager {
                     }
                 }
             }
-            return WinHelper.MyUser32Inst.CallNextHookEx(hHookKey, nCode, wParam, lParam.getPointer());
+            return WinHelper.MyUser32Inst.CallNextHookEx(hHookKey, nCode, wParam,
+                    lParam.getPointer());
         }
     }
 
@@ -231,7 +234,8 @@ public class KeybindManager {
             if (hasdo)
                 return new LRESULT(1);
         }
-        return WinHelper.MyUser32Inst.CallNextHookEx(hHookMouse, nCode, wParam, lParam.getPointer());
+        return WinHelper.MyUser32Inst.CallNextHookEx(hHookMouse, nCode, wParam,
+                lParam.getPointer());
     }
 
     public void DefaultConfig() {
@@ -249,16 +253,6 @@ public class KeybindManager {
         Register("Turn Focused Window Down", KeyCode.FuncKey.LALT, KeyCode.VK_DOWN,
                 () -> channelIn.put(new VDMessage(VDEvent.TurnWindowDown, null)));
 
-        // Register("Close Focused Window", KeyCode.FuncKey.LALT, KeyCode.VK_ESCAPE,
-        // () -> channelIn.put(new VDMessage(VDEvent.FocusedWindowClose, null)));
-
-        // Register("Minimize Focused Window", KeyCode.FuncKey.LALT, KeyCode.VK_A,
-        // () -> channelIn.put(new VDMessage(VDEvent.FocusedWindowMinimize, null)));
-
-        // Register("Maximize Focused Window and Minimize Others", KeyCode.FuncKey.LALT,
-        // KeyCode.VK_Z,
-        // () -> channelIn.put(new VDMessage(VDEvent.FocusedWindowMaximize, null)));
-
         Register("Close Focused Window", KeyCode.FuncKey.LALT, KeyCode.VK_ESCAPE,
                 () -> WindowStaticAction.SendClose(WindowStaticAction.GetForegroundWindow()));
 
@@ -271,28 +265,31 @@ public class KeybindManager {
         for (byte i = 0; i < 9; i++) {
             var stri = String.valueOf(i + 1);
             var obji = Integer.valueOf(i);
-            Register("Switch Focused Monitor to Virtual Desk " + stri, KeyCode.FuncKey.LALT, (byte) (KeyCode.VK_1 + i),
+            Register("Switch Focused Monitor to Virtual Desk " + stri, KeyCode.FuncKey.LALT,
+                    KeyCode.VK_1 + i,
                     () -> channelIn.put(new VDManMessage(VDManEvent.SwitchToVD, obji)));
             Register("Move Focused Window to Virtual Desk " + stri,
-                    (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL), (byte) (KeyCode.VK_1 + i),
+                    KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL, KeyCode.VK_1 + i,
                     () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, obji)));
         }
 
         Register("Switch Focused Monitor to Previous Virtual Desk",
-                (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL), KeyCode.VK_LEFT,
+                KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL, KeyCode.VK_LEFT,
                 () -> channelIn.put(new VDManMessage(VDManEvent.SwitchToVD, Integer.valueOf(-1))));
 
         Register("Switch Focused Monitor to Next Virtual Desk",
-                (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL), KeyCode.VK_RIGHT,
+                KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL, KeyCode.VK_RIGHT,
                 () -> channelIn.put(new VDManMessage(VDManEvent.SwitchToVD, Integer.valueOf(-2))));
 
         Register("Move Focused Window to Previous Virtual Desk",
-                (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN), KeyCode.VK_LEFT,
-                () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, Integer.valueOf(-1))));
+                KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN,
+                KeyCode.VK_LEFT, () -> channelIn.put(
+                        new VDManMessage(VDManEvent.FocusedWindowMoveTo, Integer.valueOf(-1))));
 
         Register("Move Focused Window to Next Virtual Desk",
-                (byte) (KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN), KeyCode.VK_RIGHT,
-                () -> channelIn.put(new VDManMessage(VDManEvent.FocusedWindowMoveTo, Integer.valueOf(-2))));
+                KeyCode.FuncKey.LALT | KeyCode.FuncKey.LCONTROL | KeyCode.FuncKey.LWIN,
+                KeyCode.VK_RIGHT, () -> channelIn.put(
+                        new VDManMessage(VDManEvent.FocusedWindowMoveTo, Integer.valueOf(-2))));
 
         Register("Reset Layout of Focused Virtual Desk", KeyCode.FuncKey.LALT, KeyCode.VK_R,
                 () -> channelIn.put(new VDMessage(VDEvent.ResetLayout, null)));

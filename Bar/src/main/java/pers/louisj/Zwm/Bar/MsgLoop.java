@@ -31,7 +31,7 @@ import io.qt.widgets.QApplication;
 public class MsgLoop extends QThread {
     Channel<PluginMessage> channelIn = new Channel<>(1024);
     protected Logger logger;
-    protected DebugBarWindow debugBarWindow = new DebugBarWindow();
+    // protected DebugBarWindow debugBarWindow = new DebugBarWindow();
     protected Map<Monitor, BarWindow> barMap = new HashMap<>();
     protected Monitor lastFocused;
     protected List<VirtualDesk> vds;
@@ -70,7 +70,7 @@ public class MsgLoop extends QThread {
         logger.info("Bar Plugin MainLoop, Defer, Start");
         channelIn.put(null);
         this.join();
-        debugBarWindow.close();
+        // debugBarWindow.close();
         for (var barW : barMap.values()) {
             barW.Defer();
             barW.close();
@@ -80,7 +80,7 @@ public class MsgLoop extends QThread {
 
     public void Start() {
         qa = QApplication.instance();
-        debugBarWindow.show();
+        // debugBarWindow.show();
         this.start();
     }
 

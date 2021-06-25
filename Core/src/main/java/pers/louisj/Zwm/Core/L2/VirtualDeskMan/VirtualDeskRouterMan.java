@@ -2,16 +2,13 @@ package pers.louisj.Zwm.Core.L2.VirtualDeskMan;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Global.WindowFilter;
-import pers.louisj.Zwm.Core.L2.VirtualDesk.LayoutFilter;
 import pers.louisj.Zwm.Core.L2.VirtualDesk.VirtualDesk;
 import pers.louisj.Zwm.Core.L2.Window.Window;
 

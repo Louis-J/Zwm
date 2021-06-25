@@ -38,23 +38,20 @@ class VdButtons extends QScrollArea {
         });
         widgetContents = new QWidget(this);
         widgetContents.setObjectName("scrollAreaWidgetContents");
-        // widgetContents.setGeometry(0, 0, 10 * 60, BarUi.height - 5);
-        // widgetContents.adjustSize();
         setWidget(widgetContents);
     }
 
     void Refresh(List<VirtualDesk> vds, Context context, Monitor monitor) {
         QBoxLayout layout = new QHBoxLayout(this);
         layout.setContentsMargins(0, 0, 0, 0);
-        final var minsize = new QSize(60, BarUi.height - 5);
+        // final var minsize = new QSize(60, BarUi.height - 5);
         final var policy = new QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored);
+
         for(var c : widgetContents.findChildren()) {
             c.dispose();
         }
-        // for(var c : btns) {
-        //     c.dispose();
-        // }
         btns = new ArrayList<>();
+
         for (int i = 0; i < vds.size(); i++) {
             var vd = vds.get(i);
             QPushButton pBtn = new QPushButton();

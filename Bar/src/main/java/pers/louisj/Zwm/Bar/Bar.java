@@ -4,8 +4,6 @@ import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Derived.IPlugin;
 
 public class Bar implements IPlugin {
-    // private Context context;
-
     private MsgLoop msgLoop;
 
     @Override
