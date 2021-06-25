@@ -50,6 +50,7 @@ public abstract class WindowStaticAction {
                 throw e;
             }
             setPointer(ret);
+            window.Refresh.RefreshRect(rect);
         }
 
         public void EndSetLocation() {

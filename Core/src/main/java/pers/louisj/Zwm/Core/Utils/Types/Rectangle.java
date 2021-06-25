@@ -16,4 +16,9 @@ public class Rectangle {
     public Point Center() {
         return new Point(x + width / 2, y + height / 2);
     }
+
+    @Override
+    public String toString() {
+        return "Size: " + x + ", " + y + ", " + width + ", " + height;
+    }
 }

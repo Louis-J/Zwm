@@ -2,6 +2,7 @@ package pers.louisj.Zwm.Bar;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.Logger;
@@ -10,7 +11,9 @@ import pers.louisj.Zwm.Core.Global.Message.Message;
 import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessage;
 import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessageCustom;
 import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessageFocus;
+import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessageMonitors;
 import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessageRefresh;
+import pers.louisj.Zwm.Core.Global.Message.PluginMessage.PluginMessageVDs;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
 import pers.louisj.Zwm.Core.L1.MainLoop.MessageHook;
@@ -31,6 +34,7 @@ public class MsgLoop extends QThread {
     protected DebugBarWindow debugBarWindow = new DebugBarWindow();
     protected Map<Monitor, BarWindow> barMap = new HashMap<>();
     protected Monitor lastFocused;
+    protected List<VirtualDesk> vds;
     protected Bar bar;
     protected QApplication qa;
     protected Context context;
@@ -92,7 +96,7 @@ public class MsgLoop extends QThread {
             switch (msg.type) {
                 case Focus: {
                     var pmsg = (PluginMessageFocus) msg;
-                    VirtualDesk vd = (VirtualDesk) pmsg.param;
+                    VirtualDesk vd = pmsg.param;
                     Monitor monitor = vd.monitor;
                     Window window = vd.lastFocused;
 
@@ -101,14 +105,14 @@ public class MsgLoop extends QThread {
                             var lastBar = barMap.get(lastFocused);
                             MyEvent.Exec(new MyEvent() {
                                 public void Invoke() {
-                                    lastBar.ui.labelTitle.setStyleSheet("color:#F0F0F0;");
+                                    lastBar.ui.labelTitle.setStyleSheet(BarUi.colorOff);
                                 }
                             });
                         }
                         var thisBar = barMap.get(monitor);
                         MyEvent.Exec(new MyEvent() {
                             public void Invoke() {
-                                thisBar.ui.labelTitle.setStyleSheet("color:#f0B060;");
+                                thisBar.ui.labelTitle.setStyleSheet(BarUi.colorOn);
                             }
                         });
                         lastFocused = monitor;
@@ -132,7 +136,7 @@ public class MsgLoop extends QThread {
                 }
                 case Refresh: {
                     var pmsg = (PluginMessageRefresh) msg;
-                    VirtualDesk vd = (VirtualDesk) pmsg.param;
+                    VirtualDesk vd = pmsg.param;
                     Monitor monitor = vd.monitor;
                     if (monitor == null)
                         break;
@@ -142,7 +146,6 @@ public class MsgLoop extends QThread {
 
                     if (window == null)
                         MyEvent.Exec(new MyEvent() {
-
                             public void Invoke() {
                                 thisBar.ui.labelTitle.setText("null");
                             }
@@ -158,23 +161,61 @@ public class MsgLoop extends QThread {
                     break;
                 }
                 case Monitors: {
+                    var pmsg = (PluginMessageMonitors) msg;
+                    vds = pmsg.param;
                     MyEventBlock.Exec(new MyEventBlock() {
                         public void Invoke() {
                             for (var p : barMap.entrySet()) {
-                                var window = p.getKey().vd.lastFocused;
+                                var k = p.getKey();
+                                var v = p.getValue();
+                                var window = k.vd.lastFocused;
                                 if (window == null)
-                                    p.getValue().ui.labelTitle.setText("null");
+                                    v.ui.labelTitle.setText("null");
                                 else {
                                     window.Refresh.RefreshTitle();
-                                    p.getValue().ui.labelTitle.setText(window.windowTitle);
+                                    v.ui.labelTitle.setText(window.windowTitle);
+                                }
+                                v.RefreshVDs(vds, context, k);
+                                v.HighLightVD(vds.indexOf(k.vd));
+                            }
+                        }
+                    });
+                    break;
+                }
+                case VDs: {
+                    var pmsg = (PluginMessageVDs) msg;
+                    MyEventBlock.Exec(new MyEventBlock() {
+                        public void Invoke() {
+                            var bar1 = barMap.get(pmsg.vd1.monitor);
+                            if (bar1 != null) {
+                                Window window1 = pmsg.vd1.lastFocused;
+                                if (window1 == null)
+                                    bar1.ui.labelTitle.setText("null");
+                                else {
+                                    window1.Refresh.RefreshTitle();
+                                    bar1.ui.labelTitle.setText(window1.windowTitle);
+                                }
+                                bar1.RefreshVDs(vds, context, pmsg.vd1.monitor);
+                                bar1.HighLightVD(vds.indexOf(pmsg.vd1));
+                            }
+                            if (pmsg.vd2 != null) {
+                                var bar2 = barMap.get(pmsg.vd2.monitor);
+                                if (bar2 != null) {
+                                    Window window2 = pmsg.vd2.lastFocused;
+                                    if (window2 == null)
+                                        bar2.ui.labelTitle.setText("null");
+                                    else {
+                                        window2.Refresh.RefreshTitle();
+                                        bar2.ui.labelTitle.setText(window2.windowTitle);
+                                    }
+                                    bar2.RefreshVDs(vds, context, pmsg.vd2.monitor);
+                                    bar2.HighLightVD(vds.indexOf(pmsg.vd2));
                                 }
                             }
                         }
                     });
                     break;
                 }
-                case VDs:
-                    break;
                 case Custom: {
                     var pmsg = (PluginMessageCustom) msg;
                     synchronized (pmsg.obj) {

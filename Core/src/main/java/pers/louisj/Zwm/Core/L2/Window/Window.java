@@ -134,6 +134,7 @@ public class Window {
                     return;
                 throw new Win32Exception(errCode);
             }
+            Refresh.RefreshRect(rect);
         }
 
         @Structure.FieldOrder({ "cbSize", "rcMonitor", "rcWork", "dwFlags", "szDevice" })
@@ -173,6 +174,7 @@ public class Window {
                     return;
                 throw new Win32Exception(errCode);
             }
+            Refresh.RefreshRect(rect);
         }
 
         public void DecorateEnable() {
@@ -238,6 +240,11 @@ public class Window {
             RECT crect = new RECT();
             WinHelper.MyUser32Inst.GetWindowRect(hWnd, crect);
             rect = new Rectangle(crect.left, crect.top, crect.right - crect.left, crect.bottom - crect.top);
+        }
+
+        public void RefreshRect(Rectangle rect) {
+            // Window.this.rect = new Rectangle(rect.x, rect.y, rect.width, rect.height);
+            // RefreshRect();
         }
 
         public void RefreshState() {

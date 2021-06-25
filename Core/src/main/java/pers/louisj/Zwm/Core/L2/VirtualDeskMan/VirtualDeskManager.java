@@ -22,6 +22,7 @@ import pers.louisj.Zwm.Core.L2.VirtualDesk.VirtualDesk;
 import pers.louisj.Zwm.Core.L2.Window.Window;
 import pers.louisj.Zwm.Core.L2.Window.WindowStaticAction;
 import pers.louisj.Zwm.Core.Utils.Async.ChannelList;
+import pers.louisj.Zwm.Core.Utils.Types.Pair;
 import pers.louisj.Zwm.Core.Utils.Types.Point;
 
 interface DefaultVDFunc {
@@ -105,7 +106,8 @@ public class VirtualDeskManager {
                         m.vd = vd;
                     }
                 }
-                channelOutMonitors.put(new PluginMessageMonitors(monitors));
+                channelOutMonitors
+                        .put(new PluginMessageMonitors(new ArrayList<VirtualDesk>(virtualDesks)));
                 break;
             }
 
@@ -116,6 +118,14 @@ public class VirtualDeskManager {
                 else if (index == -1) // Prev VD
                     index = (focusedIndex + virtualDesks.size() - 1) % virtualDesks.size();
                 ActionGlobal.VDSwitchTo(index);
+                break;
+            }
+            case SwitchMonitorToVD: {
+                var param = (Pair<Monitor, Integer>) msg.param;
+                var monitor = param.t1;
+                int index = param.t2.intValue();
+
+                ActionGlobal.VDSwitchToMonitor(monitor, index);
                 break;
             }
 
@@ -172,8 +182,6 @@ public class VirtualDeskManager {
             // TODO: Impl
             case VDAdd:
             case VDRemove:
-            case SwitchMonitorToVD:
-                break;
         }
     }
 
@@ -234,6 +242,7 @@ public class VirtualDeskManager {
             }
             for (var vd : virtualDesks)
                 channelOutRefresh.put(new PluginMessageRefresh(vd));
+            logger.info("WindowAddInit, PluginMessageFocus");
             channelOutFocus.put(new PluginMessageFocus(focusedVD));
         }
 
@@ -278,6 +287,7 @@ public class VirtualDeskManager {
             vd.lastFocused = window;
             if (focusedIndex != index) {
                 focusedIndex = index;
+                logger.info("WindowForeground, PluginMessageFocus");
                 channelOutFocus.put(new PluginMessageFocus(vd));
             } else
                 channelOutRefresh.put(new PluginMessageRefresh(vd));
@@ -292,6 +302,7 @@ public class VirtualDeskManager {
             } else {
                 focusedIndex = index;
                 m.vd.lastFocused = null;
+                logger.info("MonitorForeground, PluginMessageFocus");
                 channelOutFocus.put(new PluginMessageFocus(m.vd));
             }
         }
@@ -312,6 +323,7 @@ public class VirtualDeskManager {
                         ActionGlobal.VDSwitchTo(vdIndex);
                 } else {
                     focusedIndex = vdIndex;
+                    logger.info("FocusedWindowMoveTo, PluginMessageFocus");
                     channelOutFocus.put(new PluginMessageFocus(target));
                 }
             }
@@ -338,14 +350,45 @@ public class VirtualDeskManager {
                 var targetVd = virtualDesks.get(vdindex);
                 var targetM = targetVd.monitor;
 
-                if (targetM != null)
+                if (targetM != null) {
                     sourceVd.Enable(targetM);
-                else
+                    targetM.vd = sourceVd;
+                } else
                     sourceVd.Disable();
                 targetVd.Enable(sourceM);
+                sourceM.vd = targetVd;
                 targetVd.Focus();
 
                 focusedIndex = vdindex;
+
+                if (targetM == null)
+                    channelOutVDs.put(new PluginMessageVDs(targetVd, null));
+                else
+                    channelOutVDs.put(new PluginMessageVDs(targetVd, sourceVd));
+            }
+            logger.info("VDSwitchTo, END");
+        }
+
+        // TODO:
+        public void VDSwitchToMonitor(Monitor monitor, int vdindex) {
+            logger.info("VDSwitchToMonitor, {}", vdindex);
+            var sourceM = monitor;
+            var sourceVd = monitor.vd;
+            var targetVd = virtualDesks.get(vdindex);
+            var targetM = targetVd.monitor;
+
+            if (sourceVd != targetVd) {
+                if (targetM != null && targetM != sourceM) {
+                    sourceVd.Enable(targetM);
+                    targetM.vd = sourceVd;
+                } else
+                    sourceVd.Disable();
+                targetVd.Enable(sourceM);
+                sourceM.vd = targetVd;
+                if (Query.GetFocusedVD() == sourceVd) {
+                    focusedIndex = vdindex;
+                    targetVd.Focus();
+                }
 
                 if (targetM == null)
                     channelOutVDs.put(new PluginMessageVDs(targetVd, null));

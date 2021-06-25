@@ -34,6 +34,7 @@ class WindowUnit {
     }
 }
 
+
 class WindowGrid {
     public class WindowColumn {
         WindowUnit begin = null;
@@ -518,9 +519,9 @@ class WindowGrid {
     }
 
     // TODO:
-    public void ChangeSize(WindowColumn x, WindowUnit y) {
-    }
+    public void ChangeSize(WindowColumn x, WindowUnit y) {}
 }
+
 
 class GridPosi {
     public WindowColumn x;
@@ -531,6 +532,7 @@ class GridPosi {
         this.y = y;
     }
 }
+
 
 public class GridLayout implements ILayout {
 
@@ -544,8 +546,7 @@ public class GridLayout implements ILayout {
     public Monitor monitor;
     private Rectangle screen;
 
-    public GridLayout() {
-    }
+    public GridLayout() {}
 
     public void Enable(Rectangle screen) {
         this.screen = screen;
@@ -848,10 +849,13 @@ public class GridLayout implements ILayout {
         var rectOld = window.Query.GetRect();
         window.Refresh.RefreshRect();
         var rectNew = window.Query.GetRect();
-        if (rectOld.height == rectNew.height && rectOld.width == rectNew.width)
+        logger.info("WindowMoveResize, rectOld, {}", rectOld);
+        logger.info("WindowMoveResize, rectNew, {}", rectNew);
+        if (rectOld.height == rectNew.height && rectOld.width == rectNew.width) {
             ChangeLoc(window, gridPosi);
-        else
+        } else {
             ChangeSize(window, gridPosi);
+        }
     }
 
     @Override
