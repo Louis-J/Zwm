@@ -19,12 +19,7 @@ public class VirtualDeskFilter extends WindowFilter {
 
         MatchClass("VirtualConsoleClass"); // -----App: Conemu
 
-        // For Debug
-        MatchClass("MozillaWindowClass"); // Ignore Firefox for Debug
-        MatchClass("Chrome_WidgetWin_1"); // Ignore Visual Studio Code for Debug
-        MatchClass("SunAwtFrame"); // Ignore IDEA for Debug
 
-        MatchName("\\bin\\java.exe");
         MatchNames(new ArrayList<>(Arrays.asList(
                 new String[] {"SearchUI", "ShellExperienceHost", "LockApp", "PeopleExperienceHost",
                         "StartMenuExperienceHost", "SearchApp", "ScreenClippingHost",})));

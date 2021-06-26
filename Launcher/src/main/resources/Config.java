@@ -11,7 +11,8 @@ public class Config implements IConfig {
         context.keyBindMan.DefaultConfig();
         context.filterVirtualDesk.DefaultConfig();
         context.vdMan.filterLayout.DefaultConfig();
-
+        context.vdMan.filterLayout.MatchClass("screenClass"); // powerpoint fullscreen
+        
         context.vdMan.ActionGlobal.VDCreate("1", null, new GridLayout());
         context.vdMan.ActionGlobal.VDCreate("2", null, new GridLayout());
         context.vdMan.ActionGlobal.VDCreate("3", null, new GridLayout());
