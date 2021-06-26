@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
@@ -43,7 +44,7 @@ public class ConfigHelper {
         if (!configFile.exists()) {
             // first run
             try {
-                FileInputStream fins = new FileInputStream(DefaultConfigFile);
+                InputStream fins = this.getClass().getClassLoader().getResourceAsStream(DefaultConfigFile);
                 byte[] buffer = new byte[fins.available()];
                 fins.read(buffer);
                 fins.close();
@@ -120,6 +121,6 @@ public class ConfigHelper {
         return instance.GetContext();
     }
 
-    protected static String DefaultConfigFile = System.getProperty("user.dir") + "\\src\\main\\resources\\Config.java";
+    protected static String DefaultConfigFile = "Config.java";
     protected static String DirectName = "\\.ZwmDebug";
 }
