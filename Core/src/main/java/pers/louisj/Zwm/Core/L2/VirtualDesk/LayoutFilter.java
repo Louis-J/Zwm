@@ -11,18 +11,17 @@ public class LayoutFilter extends WindowFilter {
 
     @Override
     public void DefaultConfig() {
-        MatchClass("Shell_TrayWnd"); // -----------Task Bar
-        MatchClass("ApplicationFrameWindow"); // --设置, Microsoft Store, Realtek Audio Console
-        MatchClass("Windows.UI.Core.CoreWindow");
-        MatchClass("NotifyIconOverflowWindow"); // ?
-        MatchClass("tooltips_class32"); // --------?
-        MatchClass("SunAwtWindow"); // ------------prevents flickering
-        MatchClass("MultitaskingViewFrame"); // ---Alt Tab Window
-        MatchClass("TaskListThumbnailWnd"); // ----TaskList in Task Bar
-        MatchClass("SysShadow"); // ---------------Some Shadow Window
-        MatchClass("OperationStatusWindow"); // ---explorer "file is in using" window
-
-        MatchClass("7ttRefreshSyncWnd"); // -------App: 7+ taskbar tweaker
+        MatchClass("Shell_TrayWnd"); // -------------Sys App: TaskBar
+        MatchClass("ApplicationFrameWindow"); // ----Sys App: SysSetting, 设置, Microsoft Store, Realtek Audio Console
+        MatchClass("Windows.UI.Core.CoreWindow"); // Sys App: Calc
+        MatchClass("MultitaskingViewFrame"); // -----Sys App: Alt Tab Window
+        MatchClass("TaskListThumbnailWnd"); // ------Sys App: TaskList in Task Bar
+        MatchClass("OperationStatusWindow"); // -----Sys App: explorer "file is in using" window
+        MatchClass("SysShadow"); // -----------------Some Shadow Window
+        MatchClass("NotifyIconOverflowWindow"); //---?
+        MatchClass("tooltips_class32"); // ----------?
+        MatchClass("SunAwtWindow"); // --------------Apps: Java Awt apps
+        MatchClass("7ttRefreshSyncWnd"); // ---------App: 7+ taskbar tweaker
     }
 
     @Override

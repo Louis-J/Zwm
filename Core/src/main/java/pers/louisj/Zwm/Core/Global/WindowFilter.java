@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import pers.louisj.Zwm.Core.L2.Window.Window;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.ahocorasick.trie.Emit;
@@ -35,8 +36,16 @@ public abstract class WindowFilter {
         matchClassStrs.addAll(strs);
     }
 
+    public void MatchClasses(String[] strs) {
+        matchClassStrs.addAll(Arrays.asList(strs));
+    }
+
     public void MatchNames(List<String> strs) {
         matchNameStrs.addAll(strs);
+    }
+
+    public void MatchNames(String[] strs) {
+        matchNameStrs.addAll(Arrays.asList(strs));
     }
 
     public void MatchCustom(FilterCallBack f) {

@@ -14,15 +14,16 @@ public class VirtualDeskFilter extends WindowFilter {
 
     @Override
     public void DefaultConfig() {
-        MatchClasses(new ArrayList<>(Arrays.asList(new String[] {"TaskManagerWindow", "MSCTFIME UI",
-                "SHELLDLL_DefView", "LockScreenBackstopFrame", "WorkerW", "Progman",})));
+        MatchClasses(new String[] {"TaskManagerWindow", // Sys App: TaskManagerWindow
+                "MSCTFIME UI", // Sys App: For IME
+                "LockScreenBackstopFrame",});
 
-        MatchClass("VirtualConsoleClass"); // -----App: Conemu
+        MatchClass("VirtualConsoleClass"); // App: Conemu
 
 
-        MatchNames(new ArrayList<>(Arrays.asList(
-                new String[] {"SearchUI", "ShellExperienceHost", "LockApp", "PeopleExperienceHost",
-                        "StartMenuExperienceHost", "SearchApp", "ScreenClippingHost",})));
+        MatchNames(
+                new String[] {"SearchUI", "ShellExperienceHost", "PeopleExperienceHost",
+                        "StartMenuExperienceHost", "SearchApp", "ScreenClippingHost",});
     }
 
     @Override
