@@ -1,19 +1,9 @@
 package pers.louisj.Zwm.Core.Global.Message.VDMessage;
 
+// not mention to a specific window, but mention to the focused window or focused virtual desk
 public enum VDEvent {
-    // SwitchToNextVirtualDesk, SwitchToVirtualDesk,
-
-    VirtualDeskUpdated,
-
-    // MoveWindowToVirtualDesk,
-    // SwitchToPrevVirtualDesk, MoveWindowToPrevVirtualDesk, MoveWindowToNextVirtualDesk, FocusedWindowClose,
-    // FocusedWindowMinimize, FocusedWindowMaximize, VDDebugInfo,
-
-    // WindowUpdateState,
-    WindowUpdateLocation,
     TurnWindowLeft, TurnWindowRight, TurnWindowUp, TurnWindowDown,
     ResetLayout,
     AreaShrink, AreaExpand,
-    ToggleTiling, 
-    WindowMinimizeStart, WindowMinimizeEnd,
+    ToggleLayout, 
 }

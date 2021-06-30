@@ -15,4 +15,8 @@ public enum VDManEvent {
     //Not Implemented
     VDAdd, VDRemove,
     SwitchMonitorToVD,
+
+    WindowMoveResize,
+    WindowMinimizeStart,
+    WindowMinimizeEnd,
 }

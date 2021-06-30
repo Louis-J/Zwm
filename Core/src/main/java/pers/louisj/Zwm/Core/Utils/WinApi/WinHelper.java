@@ -1,18 +1,27 @@
 package pers.louisj.Zwm.Core.Utils.WinApi;
 
 import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.Psapi;
 import com.sun.jna.platform.win32.Win32Exception;
 
 import com.sun.jna.Native;
 
 import com.sun.jna.win32.W32APIOptions;
 import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.platform.win32.WinDef.POINT;
+
+import pers.louisj.Zwm.Core.Utils.Types.Point;
 
 public class WinHelper {
     public final static boolean Is64Bit = true;
-    public final static MyUser32 MyUser32Inst = Native.load("user32", MyUser32.class, W32APIOptions.DEFAULT_OPTIONS);
-    public final static Kernel32 Kernel32Inst = Native.load("kernel32", Kernel32.class, W32APIOptions.DEFAULT_OPTIONS);
-    public final static DWMApi DWMApiInst = Native.load("dwmapi", DWMApi.class, W32APIOptions.DEFAULT_OPTIONS);
+    public final static MyUser32 MyUser32Inst =
+            Native.load("user32", MyUser32.class, W32APIOptions.DEFAULT_OPTIONS);
+    public final static Kernel32 Kernel32Inst =
+            Native.load("kernel32", Kernel32.class, W32APIOptions.DEFAULT_OPTIONS);
+    public final static DWMApi DWMApiInst =
+            Native.load("dwmapi", DWMApi.class, W32APIOptions.DEFAULT_OPTIONS);
+    public final static Psapi PsapiInst =
+            Native.load("Psapi", Psapi.class, W32APIOptions.DEFAULT_OPTIONS);
 
     public interface CallBackWithBuffer1 {
         public int Invoke(char[] buffer, int size);
@@ -47,5 +56,11 @@ public class WinHelper {
             size *= 2;
         } while (Kernel32Inst.GetLastError() == Kernel32.ERROR_INSUFFICIENT_BUFFER);
         throw new Win32Exception(Kernel32Inst.GetLastError());
+    }
+
+    public static final Point GetMousePoint() {
+        POINT winPoint = new POINT();
+        WinHelper.MyUser32Inst.GetCursorPos(winPoint);
+        return new Point(winPoint.x, winPoint.y);
     }
 }

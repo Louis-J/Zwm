@@ -41,7 +41,7 @@ public class BarWindow extends QMainWindow {
         abmCode.setValue(ShellAPI.ABM_SETPOS);
         Shell32.INSTANCE.SHAppBarMessage(abmCode, appBarData);
 
-        ui.btnLogo.setIcon(new QIcon("./../icon/ZWMICO.png"));
+        ui.btnLogo.setIcon(new QIcon("./icon/ZWMICO.png"));
         // setFocusPolicy(Qt.FocusPolicy.NoFocus);
     }
 

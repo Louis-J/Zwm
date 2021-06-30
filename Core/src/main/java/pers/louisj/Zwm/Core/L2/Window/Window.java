@@ -13,6 +13,7 @@ import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinDef.WPARAM;
 import com.sun.jna.platform.win32.WinDef.LPARAM;
+import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.Structure;
@@ -41,21 +42,24 @@ public class Window {
     private int winStyle;
     private int winStyleEx;
 
+    private volatile int predictHideTime = 0;
+
     public ActionImpl Action = new ActionImpl();
     public RefreshImpl Refresh = new RefreshImpl();
     public QueryImpl Query = new QueryImpl();
 
     public class ActionImpl {
         public void Focus() {
-            logger.info("Focus, {}", this);
+            logger.info("Focus, {}", Window.this);
             WinHelper.MyUser32Inst.SetForegroundWindow(hWnd);
         }
 
         public boolean Unfocus() {
-            logger.info("Unfocus, {}", this);
+            logger.info("Unfocus, {}", Window.this);
             final int GW_HWNDNEXT = 2;
             var hWndNext = WinHelper.MyUser32Inst.GetWindow(hWnd, GW_HWNDNEXT);
-            if(hWndNext == null || hWndNext.getPointer() == null || Pointer.nativeValue(hWndNext.getPointer()) == 0)
+            if (hWndNext == null || hWndNext.getPointer() == null
+                    || Pointer.nativeValue(hWndNext.getPointer()) == 0)
                 return false;
             WinHelper.MyUser32Inst.SetForegroundWindow(hWndNext);
             return true;
@@ -63,19 +67,22 @@ public class Window {
 
         public void Hide() {
             final int SW_HIDE = 0;
-            logger.info("Hide, {}", this);
+            logger.info("Hide, {}", Window.this);
+            // this line should run before ShowWindow, or event hook will run prior and get a number
+            // '0'
+            predictHideTime++;
             WinHelper.MyUser32Inst.ShowWindow(hWnd, SW_HIDE);
         }
 
         public void ShowNormal() {
             final int SW_SHOWNOACTIVATE = 1;
-            logger.info("ShowNormal, {}", this);
+            logger.info("ShowNormal, {}", Window.this);
             WinHelper.MyUser32Inst.ShowWindow(hWnd, SW_SHOWNOACTIVATE);
         }
 
         public void ShowMaximized() {
             final int SW_SHOWMAXIMIZED = 3;
-            logger.info("ShowMaximized, {}", this);
+            logger.info("ShowMaximized, {}", Window.this);
             WinHelper.MyUser32Inst.ShowWindow(hWnd, SW_SHOWMAXIMIZED);
         }
 
@@ -84,7 +91,7 @@ public class Window {
             // final int SW_MINIMIZE = 6;
             final int SW_SHOWMINNOACTIVE = 7;
 
-            logger.info("ShowMinimized, {}", this);
+            logger.info("ShowMinimized, {}", Window.this);
             WinHelper.MyUser32Inst.ShowWindow(hWnd, SW_SHOWMINNOACTIVE);
         }
 
@@ -101,20 +108,21 @@ public class Window {
         public void ShowNoActive() {
             final int SW_SHOWNOACTIVATE = 4;
 
-            logger.info("Show, {}", this);
+            logger.info("Show, {}", Window.this);
             WinHelper.MyUser32Inst.ShowWindow(hWnd, SW_SHOWNOACTIVATE);
         }
 
         public void BringToTop() {
-            logger.info("BringToTop, {}", this);
+            logger.info("BringToTop, {}", Window.this);
             WinHelper.MyUser32Inst.BringWindowToTop(hWnd);
         }
 
         public void SendClose() {
             final int WM_SYSCOMMAND = 0x0112;
             final int SC_CLOSE = 0xF060;
-            logger.info("SendClose, {}", this);
-            WinHelper.MyUser32Inst.SendNotifyMessage(hWnd, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
+            logger.info("SendClose, {}", Window.this);
+            WinHelper.MyUser32Inst.SendNotifyMessage(hWnd, WM_SYSCOMMAND, new WPARAM(SC_CLOSE),
+                    new LPARAM(0));
         }
 
         public void SetLocation0(Rectangle rect) {
@@ -122,12 +130,13 @@ public class Window {
                 Refresh.RefreshRect();
                 Refresh.RefreshOffset();
             }
-            final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE | WinUser.SWP_NOCOPYBITS
-                    | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
+            final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE
+                    | WinUser.SWP_NOCOPYBITS | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
             // final int flagMini = flagNormal | WinUser.SWP_NOMOVE | WinUser.SWP_NOSIZE;
 
-            if (!WinHelper.MyUser32Inst.SetWindowPos(hWnd, null, rect.x + rectOff.x, rect.y + rectOff.y,
-                    rect.width + rectOff.width, rect.height + rectOff.height, flagNormal)) {
+            if (!WinHelper.MyUser32Inst.SetWindowPos(hWnd, null, rect.x + rectOff.x,
+                    rect.y + rectOff.y, rect.width + rectOff.width, rect.height + rectOff.height,
+                    flagNormal)) {
                 var errCode = WinHelper.Kernel32Inst.GetLastError();
                 if (errCode == 1400) // handle err, means the window closed, so ignore it
                     return;
@@ -135,7 +144,7 @@ public class Window {
             }
         }
 
-        @Structure.FieldOrder({ "cbSize", "rcMonitor", "rcWork", "dwFlags", "szDevice" })
+        @Structure.FieldOrder({"cbSize", "rcMonitor", "rcWork", "dwFlags", "szDevice"})
         public class WINDOWPOS extends Structure {
             public HWND hwnd;
             public HWND hwndInsertAfter;
@@ -151,8 +160,8 @@ public class Window {
                 Refresh.RefreshRect();
                 Refresh.RefreshOffset();
             }
-            final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE | WinUser.SWP_NOCOPYBITS
-                    | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
+            final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE
+                    | WinUser.SWP_NOCOPYBITS | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
             // final int flagMini = flagNormal | WinUser.SWP_NOMOVE | WinUser.SWP_NOSIZE;
 
             final int WM_WINDOWPOSCHANGED = 0x0047;
@@ -183,10 +192,12 @@ public class Window {
             // int newWinStyle = winStyle & ~WS_THICKFRAME;
             boolean isFail;
             if (WinHelper.Is64Bit) {
-                var ret = WinHelper.MyUser32Inst.SetWindowLongPtr(hWnd, WinUser.GWL_STYLE, new Pointer(newWinStyle));
+                var ret = WinHelper.MyUser32Inst.SetWindowLongPtr(hWnd, WinUser.GWL_STYLE,
+                        new Pointer(newWinStyle));
                 isFail = ret == null || Pointer.nativeValue(ret) == 0;
             } else {
-                var ret = WinHelper.MyUser32Inst.SetWindowLong(hWnd, WinUser.GWL_STYLE, newWinStyle);
+                var ret =
+                        WinHelper.MyUser32Inst.SetWindowLong(hWnd, WinUser.GWL_STYLE, newWinStyle);
                 isFail = ret == 0;
             }
             if (isFail) {
@@ -202,7 +213,8 @@ public class Window {
         public void DecorateDisable() {
             boolean isFail;
             if (WinHelper.Is64Bit) {
-                var ret = WinHelper.MyUser32Inst.SetWindowLongPtr(hWnd, WinUser.GWL_STYLE, new Pointer(winStyle));
+                var ret = WinHelper.MyUser32Inst.SetWindowLongPtr(hWnd, WinUser.GWL_STYLE,
+                        new Pointer(winStyle));
                 isFail = ret == null || Pointer.nativeValue(ret) == 0;
             } else {
                 var ret = WinHelper.MyUser32Inst.SetWindowLong(hWnd, WinUser.GWL_STYLE, winStyle);
@@ -221,6 +233,10 @@ public class Window {
         public void SetCanLayout(boolean canLayout) {
             Window.this.canLayout &= canLayout;
         }
+
+        public boolean IsPredictHide() {
+            return (--predictHideTime) >= 0;
+        }
     }
 
     public class RefreshImpl {
@@ -236,7 +252,8 @@ public class Window {
         public void RefreshRect() {
             RECT crect = new RECT();
             WinHelper.MyUser32Inst.GetWindowRect(hWnd, crect);
-            rect = new Rectangle(crect.left, crect.top, crect.right - crect.left, crect.bottom - crect.top);
+            rect = new Rectangle(crect.left, crect.top, crect.right - crect.left,
+                    crect.bottom - crect.top);
         }
 
         public void RefreshRect(Rectangle rect) {
@@ -259,8 +276,10 @@ public class Window {
             // get offset between Window Rect via DwmGetWindowAttribute and Window Rect via
             // the offset is the size of shadow
             RECT crect = new RECT();
-            WinHelper.DWMApiInst.DwmGetWindowAttribute(hWnd, DWMApi.DWMWA_EXTENDED_FRAME_BOUNDS, crect, crect.size());
-            rectOff = new Rectangle(rect.x - crect.left, rect.y - crect.top, rect.width - (crect.right - crect.left),
+            WinHelper.DWMApiInst.DwmGetWindowAttribute(hWnd, DWMApi.DWMWA_EXTENDED_FRAME_BOUNDS,
+                    crect, crect.size());
+            rectOff = new Rectangle(rect.x - crect.left, rect.y - crect.top,
+                    rect.width - (crect.right - crect.left),
                     rect.height - (crect.bottom - crect.top));
         }
 
@@ -270,8 +289,10 @@ public class Window {
 
         public void RefreshWindowStyles() {
             if (WinHelper.Is64Bit) {
-                winStyle = WinHelper.MyUser32Inst.GetWindowLongPtr(hWnd, WinUser.GWL_STYLE).intValue();
-                winStyleEx = WinHelper.MyUser32Inst.GetWindowLongPtr(hWnd, WinUser.GWL_EXSTYLE).intValue();
+                winStyle =
+                        WinHelper.MyUser32Inst.GetWindowLongPtr(hWnd, WinUser.GWL_STYLE).intValue();
+                winStyleEx = WinHelper.MyUser32Inst.GetWindowLongPtr(hWnd, WinUser.GWL_EXSTYLE)
+                        .intValue();
             } else {
                 winStyle = WinHelper.MyUser32Inst.GetWindowLong(hWnd, WinUser.GWL_STYLE);
                 winStyleEx = WinHelper.MyUser32Inst.GetWindowLong(hWnd, WinUser.GWL_EXSTYLE);
@@ -363,7 +384,8 @@ public class Window {
 
         private static int GetWindowStyleLongPtr(HWND handle) {
             if (WinHelper.Is64Bit) {
-                return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_STYLE).intValue();
+                return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_STYLE)
+                        .intValue();
             } else {
                 return WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_STYLE);
             }
@@ -371,7 +393,8 @@ public class Window {
 
         private static int GetWindowExStyleLongPtr(HWND handle) {
             if (WinHelper.Is64Bit) {
-                return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_EXSTYLE).intValue();
+                return WinHelper.MyUser32Inst.GetWindowLongPtr(handle, WinUser.GWL_EXSTYLE)
+                        .intValue();
             } else {
                 return WinHelper.MyUser32Inst.GetWindowLong(handle, WinUser.GWL_EXSTYLE);
             }
@@ -385,14 +408,19 @@ public class Window {
 
         logger.info("Window, processId = {}", processId);
         try {
+            final int PROCESS_QUERY_INFORMATION = 0x0400;
+            final int PROCESS_VM_READ = 0x0010;
+            HANDLE hProc = WinHelper.Kernel32Inst
+                    .OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, processId);
             processName = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
                 @Override
                 public int Invoke(char[] buffer, int size) {
-                    return WinHelper.MyUser32Inst.GetWindowModuleFileName(handle, buffer, size);
+                    return WinHelper.PsapiInst.GetModuleFileNameExW(hProc, null, buffer, size);
                 }
             }, WinDef.MAX_PATH);
+            WinHelper.Kernel32Inst.CloseHandle(hProc);
         } catch (Win32Exception e) {
-            processName = "--NA--";
+            processName = "";
         }
 
         windowClass = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
@@ -417,7 +445,8 @@ public class Window {
 
     @Override
     public String toString() {
-        return "" + Pointer.nativeValue(hWnd.getPointer()) + '|' + processId + '|' + windowTitle + '|' + windowClass + '|' + processName;
+        return "" + Pointer.nativeValue(hWnd.getPointer()) + '|' + processId + '|' + windowTitle
+                + '|' + windowClass + '|' + processName;
     }
 
     // the handle is the only const val there, other should be mutable

@@ -40,7 +40,7 @@ public class MsgLoopQT implements IMsgLoop {
     private static final int threadId = WinHelper.Kernel32Inst.GetCurrentThreadId();
 
     static {
-        String qtDir = System.getProperty("user.dir") + "\\..\\mymin-lib-6.1\\";
+        String qtDir = System.getProperty("user.dir") + "\\";
         String envPath = System.getProperty("java.library.path");
         System.setProperty("java.library.path", qtDir + "bin;" + envPath);
     }

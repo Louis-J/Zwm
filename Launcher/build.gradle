@@ -10,8 +10,8 @@ group 'pers.louisj.Zwm.Launcher'
 version '0.0.1'
 
 // applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-XX:+UseZGC"]
-// applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-XX:+UseZGC", "-Dfile.encoding=utf-8"]
-applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-Dfile.encoding=utf-8"]
+applicationDefaultJvmArgs = ["-server", "-Xmx256M", "-XX:+UseZGC", "-Dfile.encoding=utf-8"]
+// applicationDefaultJvmArgs = ["-Xcomp", "-server", "-Xmx256M", "-XX:+UseZGC", "-Dfile.encoding=utf-8"]
 
 repositories {
     // Use Maven Central for resolving dependencies.

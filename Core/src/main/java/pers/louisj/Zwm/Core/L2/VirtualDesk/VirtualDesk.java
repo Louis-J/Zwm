@@ -10,6 +10,7 @@ import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.Monitor;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouter;
 import pers.louisj.Zwm.Core.L2.Window.Window;
+import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 public class VirtualDesk {
     private static Logger logger = LogManager.getLogger("VirtualDesk");
@@ -64,10 +65,19 @@ public class VirtualDesk {
             layout.AreaExpand(lastFocused);
         }
 
-        public void WindowMoveResize() {
-            if (lastFocused == null || layout == null)
+        public void WindowMoveResize(Window window) {
+            if (layout == null)
                 return;
-            layout.WindowMoveResize(lastFocused);
+            var rectOld = window.Query.GetRect();
+            window.Refresh.RefreshRect();
+            var rectNew = window.Query.GetRect();
+            logger.info("WindowMoveResize, rectOld, {}", rectOld);
+            logger.info("WindowMoveResize, rectNew, {}", rectNew);
+            if (rectOld.height == rectNew.height && rectOld.width == rectNew.width) {
+                layout.WindowMove(window, WinHelper.GetMousePoint());
+            } else {
+                layout.WindowResize(window);
+            }
         }
 
         public void WindowToggleMinimize(Window window, boolean isMinimize) {
@@ -75,8 +85,6 @@ public class VirtualDesk {
             if (layout != null) {
                 layout.ToggleMinimize(window, isMinimize);
             }
-            if (!isMinimize && window.Query.IsFocused())
-                lastFocused = window;
         }
 
         public void ResetLayout() {
@@ -85,10 +93,10 @@ public class VirtualDesk {
             }
         }
 
-        public void ToggleTiling() {
+        public void ToggleLayout() {
             if (lastFocused == null || layout == null)
                 return;
-            layout.WindowToggleLayout(lastFocused);
+            layout.ToggleLayout(lastFocused);
         }
     }
 
@@ -232,102 +240,6 @@ public class VirtualDesk {
         }
     }
 
-    // public void SwapWindowToPoint(Window window, int x, int y) {
-    // if (allWindows.contains(window)) {
-    // var swapWindow = GetLayoutSlotWindowForPoint(x, y);
-    // if (swapWindow != null && window != swapWindow) {
-    // logger.info("SwapWindowToPoint[{0},{1} - {2}]", x, y, window);
-    // SwapWindows(window, swapWindow);
-    // }
-    // }
-    // }
-
-    // public boolean IsPointInside(int x, int y)
-    // {
-    // var monitor =
-    // _context.WorkspaceContainer.GetCurrentMonitorForWorkspace(this);
-
-    // if (monitor != null)
-    // {
-    // return monitor.X <= x && x <= (monitor.X + monitor.Width) && monitor.Y <= y
-    // && y <= (monitor.Y + monitor.Height);
-    // } else
-    // {
-    // return false;
-    // }
-    // }
-
-    // private int GetLayoutSlotIndexForPoint(int x, int y)
-    // {
-    // var locations = CalcLayout();
-    // if (locations == null)
-    // return -1;
-    // var monitor =
-    // _context.WorkspaceContainer.GetCurrentMonitorForWorkspace(this);
-    // if (monitor == null)
-    // return -1;
-
-    // var adjustedLocations = locations.Select(loc => new WindowLocation(loc.X +
-    // monitor.X, loc.Y + monitor.Y,
-    // loc.Width, loc.Height, loc.State)).ToList();
-
-    // var firstFit = adjustedLocations.FindIndex(l => l.IsPointInside(x, y));
-    // return firstFit;
-    // }
-
-    // private Collection<WindowLocation> CalcLayout() {
-    // var windows = ManagedWindows;
-    // var monitor =
-    // _context.WorkspaceContainer.GetCurrentMonitorForWorkspace(this);
-    // if (monitor != null) {
-    // return GetLayoutEngine().CalcLayout(windows, monitor.Width, monitor.Height);
-    // }
-    // return null;
-    // }
-
-    // public void DoLayout()
-    // {
-    // var windows = ManagedWindows.ToList();
-    // if (_context.Enabled)
-    // {
-    // var monitor =
-    // _context.WorkspaceContainer.GetCurrentMonitorForWorkspace(this);
-    // if (monitor != null)
-    // {
-    // windows.ForEach(w => w.ShowInCurrentState());
-
-    // var locations = GetLayoutEngine().CalcLayout(windows, monitor.Width,
-    // monitor.Height)
-    // .ToArray();
-
-    // using (var handle = _context.Windows.DeferWindowsPos(windows.Count))
-    // {
-    // for (var i = 0; i < locations.Length; i++)
-    // {
-    // var window = windows[i];
-    // var loc = locations[i];
-
-    // var adjustedLoc = new WindowLocation(loc.X + monitor.X, loc.Y + monitor.Y,
-    // loc.Width, loc.Height, loc.State);
-
-    // if (!window.IsMouseMoving)
-    // {
-    // handle.DeferWindowPos(window, adjustedLoc);
-    // }
-    // }
-    // }
-    // }
-    // else
-    // {
-    // windows.ForEach(w => w.Hide());
-    // }
-    // }
-    // else
-    // {
-    // windows.ForEach(w => w.ShowInCurrentState());
-    // }
-    // }
-
     public void Focus() {
         if (lastFocused != null)
             lastFocused.Action.Focus();
@@ -379,20 +291,8 @@ public class VirtualDesk {
                 ActionLayout.AreaExpand();
                 break;
             }
-            case WindowUpdateLocation: {
-                ActionLayout.WindowMoveResize();
-                break;
-            }
-            case ToggleTiling: {
-                ActionLayout.ToggleTiling();
-                break;
-            }
-            case WindowMinimizeStart: {
-                ActionLayout.WindowToggleMinimize((Window) msg.param, true);
-                break;
-            }
-            case WindowMinimizeEnd: {
-                ActionLayout.WindowToggleMinimize((Window) msg.param, false);
+            case ToggleLayout: {
+                ActionLayout.ToggleLayout();
                 break;
             }
             // TODO:
