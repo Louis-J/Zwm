@@ -21,7 +21,7 @@ public interface ILayout {
 
     public boolean WindowRemove(Window window);
 
-    public boolean WindowToggleLayout(Window window);
+    public boolean ToggleLayout(Window window);
 
     public void AreaExpand(Window window);
 

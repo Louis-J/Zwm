@@ -301,7 +301,7 @@ public class KeybindManager {
                 () -> channelIn.put(new VDMessage(VDEvent.AreaShrink, null)));
 
         Register("Toggle Tiling State for Focused Window", KeyCode.FuncKey.LALT, KeyCode.VK_T,
-                () -> channelIn.put(new VDMessage(VDEvent.ToggleTiling, null)));
+                () -> channelIn.put(new VDMessage(VDEvent.ToggleLayout, null)));
 
         Register("Exit The Program", KeyCode.FuncKey.LALT, KeyCode.VK_Q, () -> context.Exit());
 

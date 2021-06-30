@@ -14,6 +14,6 @@ public enum VDEvent {
     TurnWindowLeft, TurnWindowRight, TurnWindowUp, TurnWindowDown,
     ResetLayout,
     AreaShrink, AreaExpand,
-    ToggleTiling, 
+    ToggleLayout, 
     WindowMinimizeStart, WindowMinimizeEnd,
 }
