@@ -20,7 +20,7 @@ class VdButtons extends QScrollArea {
         super(parent);
         setObjectName("scrollArea");
         setSizePolicy(new QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed));
-        setMaximumSize(300, BarUi.height - 3);
+        setMaximumSize(240, BarUi.height - 3);
         setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);
         setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);
         installEventFilter(new QObject() {
