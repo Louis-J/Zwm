@@ -1,20 +1,11 @@
 package pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
 import pers.louisj.Zwm.Core.Utils.Types.Point;
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
-
-import com.sun.jna.platform.win32.WinUser;
-import com.sun.jna.platform.win32.WinDef.POINT;
 
 import pers.louisj.Zwm.Core.Derived.ILayout;
 import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.WindowGrid.WindowColumn;
@@ -36,7 +27,7 @@ class WindowUnit {
 
 
 class WindowGrid {
-    public class WindowColumn {
+    static class WindowColumn {
         WindowUnit begin = null;
         WindowUnit end = null;
         int sizeAll = 0, sizeShow = 0;
@@ -44,6 +35,12 @@ class WindowGrid {
         float percentShowTo = 0; // UseForMinimized
 
         WindowColumn prev = null, next = null;
+
+        public WindowColumn() {}
+
+        public WindowColumn(float percent) {
+            this.percent = percent;
+        }
 
         void AddtoEnd(WindowUnit wu) {
             if (end == null)
@@ -65,7 +62,7 @@ class WindowGrid {
             CalclayoutAll();
         }
 
-        void RemoveWindow(WindowUnit wu) {
+        void RemoveWindow(WindowUnit wu) { // Only Can Call When WC.sizeAll > 1!
             if (wu == begin) {
                 begin = wu.next;
                 begin.prev = null;
@@ -125,7 +122,44 @@ class WindowGrid {
     public int sizeAll = 0, sizeShow = 0;
     public int sumAll = 0, sumShow = 0;
     public float setp = 0.03f;
-    public byte layoutState = 0;
+    public byte RefreshState = 0; // 1: should Refresh Column; 2: should Refresh All Columns
+
+
+    protected void InsertColumnBefore(WindowColumn wc, WindowColumn dest) {
+        dest.prev.next = wc;
+        wc.prev = dest.prev;
+        dest.prev = wc;
+        wc.next = dest;
+        sizeAll++;
+    }
+
+    protected void InsertColumnAfter(WindowColumn wc, WindowColumn dest) {
+        dest.next.prev = wc;
+        wc.next = dest.next;
+        dest.next = wc;
+        wc.prev = dest;
+        sizeAll++;
+    }
+
+    protected void InsertColumnToBegin(WindowColumn wc) { // Assert wc.prev == null
+        wc.next = begin;
+        if (begin != null)
+            begin.prev = wc;
+        else
+            end = wc;
+        begin = wc;
+        sizeAll++;
+    }
+
+    protected void InsertColumnToEnd(WindowColumn wc) { // Assert wc.next == null
+        wc.prev = end;
+        if (end != null)
+            end.next = wc;
+        else
+            begin = wc;
+        end = wc;
+        sizeAll++;
+    }
 
     public GridPosi AddToColumn(WindowColumn wc, Window window) {
         WindowUnit wu = new WindowUnit(window);
@@ -136,32 +170,24 @@ class WindowGrid {
             if (wc.sizeShow == 1) {
                 sizeShow++;
                 CalclayoutShow();
-                layoutState = 2;
-            } else {
-                layoutState = 1;
-            }
-        } else {
-            layoutState = 0;
-        }
+                RefreshState = 2;
+            } else
+                RefreshState = 1;
+        } else
+            RefreshState = 0;
         return new GridPosi(wc, wu);
     }
 
     public GridPosi AddToNewColumn(Window window) {
         WindowUnit wu = new WindowUnit(window);
-        var wc = new WindowColumn();
-        wc.AddtoEnd(wu);
-        if (end == null)
-            begin = wc;
+        float percent;
+        if (sizeAll == 0)
+            percent = 1f;
         else
-            end.next = wc;
-        wc.prev = end;
-        end = wc;
-        if (sizeAll == 0) {
-            wc.percent = 1f;
-        } else {
-            wc.percent = 1f / sizeAll;
-        }
-        sizeAll++;
+            percent = 1f / sizeAll;
+        var wc = new WindowColumn(percent);
+        wc.AddtoEnd(wu);
+        InsertColumnToEnd(wc);
         sumAll += wc.sizeAll;
         if (wc.sizeShow != 0) {
             sizeShow++;
@@ -169,15 +195,15 @@ class WindowGrid {
             if (wc.sizeShow == 1) {
                 CalclayoutShow();
                 CalclayoutAll();
-                layoutState = 2;
+                RefreshState = 2;
                 return new GridPosi(wc, wu);
             }
             CalclayoutAll();
-            layoutState = 1;
+            RefreshState = 1;
             return new GridPosi(wc, wu);
         }
         CalclayoutAll();
-        layoutState = 0;
+        RefreshState = 0;
         return new GridPosi(wc, wu);
     }
 
@@ -198,9 +224,9 @@ class WindowGrid {
         if (wc.sizeAll == 1) {
             if (sizeAll == 1) {
                 if (sizeShow != 0)
-                    layoutState = 2;
+                    RefreshState = 2;
                 else
-                    layoutState = 0;
+                    RefreshState = 0;
                 begin = end = null;
                 sizeAll = 0;
                 sizeShow = 0;
@@ -216,11 +242,11 @@ class WindowGrid {
                 sumShow--;
                 CalclayoutShow();
                 CalclayoutAll();
-                layoutState = 2;
+                RefreshState = 2;
                 return;
             }
             CalclayoutAll();
-            layoutState = 0;
+            RefreshState = 0;
             return;
         }
         wc.RemoveWindow(wu);
@@ -230,13 +256,13 @@ class WindowGrid {
             sumShow--;
             if (wc.sizeShow == 0) {
                 CalclayoutShow();
-                layoutState = 2;
+                RefreshState = 2;
                 return;
             }
-            layoutState = 1;
+            RefreshState = 1;
             return;
         }
-        layoutState = 0;
+        RefreshState = 0;
         return;
     }
 
@@ -258,26 +284,35 @@ class WindowGrid {
         CalclayoutShow();
     }
 
-    public void ShiftColumn(WindowColumn wcOrig, WindowColumn wcDest, WindowUnit wu) {
+    protected void ShiftColumn(WindowColumn wcOrig, WindowColumn wcDest, WindowUnit wu) {
         if (wcOrig.sizeAll == 1) {
             RemoveColumn(wcOrig);
             sizeAll--;
             if (wcOrig.sizeShow != 0)
                 sizeShow--;
             wcDest.AddtoEnd(wu);
-            CalclayoutShow();
             CalclayoutAll();
-            layoutState = 2;
+            CalclayoutShow();
+            RefreshState = 2;
         } else {
             wcOrig.RemoveWindow(wu);
             wu.next = null;
             wcDest.AddtoEnd(wu);
             if (!wu.window.Query.IsMinimized()) {
                 CalclayoutAll();
-                layoutState = 2;
+                if (wcOrig.sizeShow == 0 || wcDest.sizeShow == 1) {
+                    if (wcOrig.sizeShow == 0)
+                        sizeShow--;
+                    if (wcDest.sizeShow == 1)
+                        sizeShow++;
+                    CalclayoutShow();
+                    RefreshState = 2;
+                    return;
+                }
+                RefreshState = 1;
                 return;
             }
-            layoutState = 0;
+            RefreshState = 0;
         }
     }
 
@@ -293,7 +328,7 @@ class WindowGrid {
                 ShiftColumn(wc, dest, wu);
                 return dest;
             } else {
-                layoutState = 0;
+                RefreshState = 0;
                 return null;
             }
         }
@@ -303,31 +338,14 @@ class WindowGrid {
             ShiftColumn(wc, dest, wu);
             return dest;
         } else if (dest.prev == null) { // wc == dest == begin
-            var wcNew = new WindowColumn();
-            wcNew.percent = 1f / sizeAll;
-            wcNew.next = dest;
-            dest.prev = wcNew;
-            begin = wcNew;
-            sizeAll++;
-            sizeShow++;
+            var wcNew = new WindowColumn(1f / sizeAll);
+            InsertColumnToBegin(wcNew);
             ShiftColumn(wc, wcNew, wu);
-            CalclayoutShow();
-            CalclayoutAll();
-            layoutState = 2;
             return wcNew;
         } else {
-            var wcNew = new WindowColumn();
-            wcNew.percent = 1f / sizeAll;
-            dest.prev.next = wcNew;
-            wcNew.prev = dest.prev;
-            dest.prev = wcNew;
-            wcNew.next = dest;
-            sizeAll++;
-            sizeShow++;
+            var wcNew = new WindowColumn(1f / sizeAll);
+            InsertColumnBefore(wcNew, dest);
             ShiftColumn(wc, wcNew, wu);
-            CalclayoutShow();
-            CalclayoutAll();
-            layoutState = 2;
             return wcNew;
         }
     }
@@ -344,7 +362,7 @@ class WindowGrid {
                 ShiftColumn(wc, dest, wu);
                 return dest;
             } else {
-                layoutState = 0;
+                RefreshState = 0;
                 return null;
             }
         }
@@ -354,38 +372,21 @@ class WindowGrid {
             ShiftColumn(wc, dest, wu);
             return dest;
         } else if (dest.next == null) { // wc == dest == end
-            var wcNew = new WindowColumn();
-            wcNew.percent = 1f / sizeAll;
-            wcNew.prev = dest;
-            dest.next = wcNew;
-            end = wcNew;
-            sizeAll++;
-            sizeShow++;
+            var wcNew = new WindowColumn(1f / sizeAll);
+            InsertColumnToEnd(wcNew);
             ShiftColumn(wc, wcNew, wu);
-            CalclayoutShow();
-            CalclayoutAll();
-            layoutState = 2;
             return wcNew;
         } else {
-            var wcNew = new WindowColumn();
-            wcNew.percent = 1f / sizeAll;
-            dest.next.prev = wcNew;
-            wcNew.next = dest.next;
-            dest.next = wcNew;
-            wcNew.prev = dest;
-            sizeAll++;
-            sizeShow++;
+            var wcNew = new WindowColumn(1f / sizeAll);
+            InsertColumnAfter(wcNew, dest);
             ShiftColumn(wc, wcNew, wu);
-            CalclayoutShow();
-            CalclayoutAll();
-            layoutState = 2;
             return wcNew;
         }
     }
 
-    public void ShiftRow(WindowColumn wc, WindowUnit wuU, WindowUnit wuD) {
+    protected void ShiftRow(WindowColumn wc, WindowUnit wuU, WindowUnit wuD) {
         if (wuU == null) {
-            layoutState = 0;
+            RefreshState = 0;
             return;
         }
         wuU.next = wuD.next;
@@ -400,16 +401,16 @@ class WindowGrid {
             wuD.next.prev = wuU;
         wuU.prev = wuD;
         wuD.next = wuU;
-        wc.CalclayoutShow();
         wc.CalclayoutAll();
         if (!wuU.window.Query.IsMinimized() || !wuD.window.Query.IsMinimized()) {
-            layoutState = 1;
+            wc.CalclayoutShow();
+            RefreshState = 1;
         } else {
-            layoutState = 0;
+            RefreshState = 0;
         }
     }
 
-    private void CalclayoutAll() {
+    protected void CalclayoutAll() {
         float percentAll = 0;
         for (var c = begin; c != null; c = c.next) {
             percentAll += c.percent;
@@ -420,7 +421,7 @@ class WindowGrid {
         }
     }
 
-    private void CalclayoutShow() {
+    protected void CalclayoutShow() {
         float percentShow = 0;
         for (var c = begin; c != null; c = c.next) {
             if (c.sizeShow != 0)
@@ -444,10 +445,10 @@ class WindowGrid {
             if (wc.sizeShow == 0) {
                 sizeShow--;
                 CalclayoutShow();
-                layoutState = 2;
+                RefreshState = 2;
                 return;
             }
-            layoutState = 1;
+            RefreshState = 1;
             return;
         } else {
             sumShow++;
@@ -456,10 +457,10 @@ class WindowGrid {
             if (wc.sizeShow == 1) {
                 sizeShow++;
                 CalclayoutShow();
-                layoutState = 2;
+                RefreshState = 2;
                 return;
             }
-            layoutState = 1;
+            RefreshState = 1;
             return;
         }
     }
@@ -472,10 +473,10 @@ class WindowGrid {
             if (wc.sizeShow == 0) {
                 sizeShow--;
                 CalclayoutShow();
-                layoutState = 2;
+                RefreshState = 2;
                 return;
             }
-            layoutState = 1;
+            RefreshState = 1;
             return;
         } else {
             sumShow++;
@@ -484,10 +485,10 @@ class WindowGrid {
             if (wc.sizeShow == 1) {
                 sizeShow++;
                 CalclayoutShow();
-                layoutState = 2;
+                RefreshState = 2;
                 return;
             }
-            layoutState = 1;
+            RefreshState = 1;
             return;
         }
     }
@@ -584,7 +585,7 @@ public class GridLayout implements ILayout {
             return false;
 
         windowsGrid.RemoveWindow(gridPosi.x, gridPosi.y);
-        switch (windowsGrid.layoutState) {
+        switch (windowsGrid.RefreshState) {
             case 1:
                 DoLayoutColumn(gridPosi.x);
                 break;
@@ -678,7 +679,7 @@ public class GridLayout implements ILayout {
     private void AddToNewColumn(Window window) {
         var grid = windowsGrid.AddToNewColumn(window);
         windowPosi.put(window, grid);
-        switch (windowsGrid.layoutState) {
+        switch (windowsGrid.RefreshState) {
             case 1:
                 DoLayoutColumn(grid.x);
                 break;
@@ -690,7 +691,7 @@ public class GridLayout implements ILayout {
 
     private void AddToColumn(Window window, WindowColumn column) {
         windowPosi.put(window, windowsGrid.AddToColumn(column, window));
-        switch (windowsGrid.layoutState) {
+        switch (windowsGrid.RefreshState) {
             case 1:
                 DoLayoutColumn(column);
                 break;
@@ -729,13 +730,13 @@ public class GridLayout implements ILayout {
         var wcNew = windowsGrid.ShiftLeft(gridPosi.x, gridPosi.y);
         if (wcNew != null) {
             windowPosi.put(window, new GridPosi(wcNew, gridPosi.y));
-            if (windowsGrid.layoutState == 2)
+            if (windowsGrid.RefreshState == 2)
                 DoLayoutFull();
         }
     }
 
     public void ShiftRight(Window window) {
-        logger.info("GridLayout.ShiftLeft, {}", window);
+        logger.info("GridLayout.ShiftRight, {}", window);
         var gridPosi = windowPosi.get(window);
         if (gridPosi == null)
             return;
@@ -743,7 +744,7 @@ public class GridLayout implements ILayout {
         var wcNew = windowsGrid.ShiftRight(gridPosi.x, gridPosi.y);
         if (wcNew != null) {
             windowPosi.put(window, new GridPosi(wcNew, gridPosi.y));
-            if (windowsGrid.layoutState == 2)
+            if (windowsGrid.RefreshState == 2)
                 DoLayoutFull();
         }
     }
@@ -758,7 +759,7 @@ public class GridLayout implements ILayout {
             return;
 
         windowsGrid.ShiftRow(gridPosi.x, gridPosi.y.prev, gridPosi.y);
-        if (windowsGrid.layoutState == 1)
+        if (windowsGrid.RefreshState == 1)
             DoLayoutColumn(gridPosi.x);
     }
 
@@ -772,89 +773,14 @@ public class GridLayout implements ILayout {
             return;
 
         windowsGrid.ShiftRow(gridPosi.x, gridPosi.y, gridPosi.y.next);
-        if (windowsGrid.layoutState == 1)
+        if (windowsGrid.RefreshState == 1)
             DoLayoutColumn(gridPosi.x);
     }
 
-    // TODO:
-    public void ChangeSize(Window window, GridPosi gridPosi) {
-        logger.info("ChangeSize, {}", window);
-        windowsGrid.ChangeSize(gridPosi.x, gridPosi.y);
-        switch (windowsGrid.layoutState) {
-            case 1:
-                DoLayoutColumn(gridPosi.x);
-                break;
-            case 2:
-                DoLayoutFull();
-                break;
-        }
-    }
-
-    // Use The Average of Mouse Loc and Window Center Loc
-    public void ChangeLoc(Window window, GridPosi gridPosi) {
-        logger.info("ChangeLoc, {}", window);
-        Point p1 = window.Query.GetRect().Center();
-        // WinApi.GetCursorPos(out point);
-        POINT p2p = new POINT();
-        WinHelper.MyUser32Inst.GetCursorPos(p2p);
-        Point p = new Point((p1.x + p2p.x) / 2, (p1.y + p2p.y) / 2);
-        float xf = (float) (p.x - screen.x) / screen.width;
-        float yf = (float) (p.y - screen.y) / screen.height;
-        if (xf < 0)
-            xf = 0;
-        else if (xf > 1)
-            xf = 1;
-        if (yf < 0)
-            yf = 0;
-        else if (yf > 1)
-            yf = 1;
-        var swapPosi = windowsGrid.ChangeLoc(gridPosi.x, gridPosi.y, xf, yf);
-        if (swapPosi != null) {
-            windowPosi.put(window, swapPosi);
-            windowPosi.put(gridPosi.y.window, gridPosi);
-        }
-        DoLayoutFull();
-    }
-
-    public void ToggleMinimize(Window window) {
-        logger.info("ToggleMinimize, {}", window);
-        var gridPosi = windowPosi.get(window);
-        if (gridPosi == null)
-            return;
-        windowsGrid.ToggleMinimize(gridPosi.x, gridPosi.y);
-
-        switch (windowsGrid.layoutState) {
-            case 1:
-                DoLayoutColumn(gridPosi.x);
-                break;
-            case 2:
-                DoLayoutFull();
-                break;
-        }
-    }
-
+    @Override
     public void ResetLayout() {
         windowsGrid.ResetLayout();
         DoLayoutFull();
-    }
-
-    public void WindowMoveResize(Window window) {
-        logger.info("WindowMoveResize, {}", window);
-        if (screen == null)
-            return;
-        var gridPosi = windowPosi.get(window);
-        if (gridPosi == null)
-            return;
-        var rectOld = window.Query.GetRect();
-        window.Refresh.RefreshRect();
-        var rectNew = window.Query.GetRect();
-        logger.info("WindowMoveResize, rectOld, {}", rectOld);
-        logger.info("WindowMoveResize, rectNew, {}", rectNew);
-        if (rectOld.height == rectNew.height && rectOld.width == rectNew.width) {
-            ChangeLoc(window, gridPosi);
-        } else {
-            ChangeSize(window, gridPosi);
-        }
     }
 
     @Override
@@ -888,7 +814,7 @@ public class GridLayout implements ILayout {
             return false;
 
         windowsGrid.RemoveWindow(gridPosi.x, gridPosi.y);
-        switch (windowsGrid.layoutState) {
+        switch (windowsGrid.RefreshState) {
             case 1:
                 DoLayoutColumn(gridPosi.x);
                 break;
@@ -900,7 +826,7 @@ public class GridLayout implements ILayout {
     }
 
     @Override
-    public boolean WindowToggleLayout(Window window) {
+    public boolean ToggleLayout(Window window) {
         logger.info("GridLayout.WindowToggleLayout, {}", window);
         var gridPosi = windowPosi.get(window);
         if (gridPosi == null) {
@@ -918,7 +844,49 @@ public class GridLayout implements ILayout {
             return;
         windowsGrid.ToggleMinimize(gridPosi.x, gridPosi.y, isMinimize);
 
-        switch (windowsGrid.layoutState) {
+        switch (windowsGrid.RefreshState) {
+            case 1:
+                DoLayoutColumn(gridPosi.x);
+                break;
+            case 2:
+                DoLayoutFull();
+                break;
+        }
+    }
+
+    // Use The Average of Mouse Loc and Window Center Loc
+    @Override
+    public void WindowMove(Window window, Point mouse) {
+        logger.info("WindowMove, {}", window);
+        var gridPosi = windowPosi.get(window);
+        if (gridPosi == null)
+            return;
+        float xf = (float) (mouse.x - screen.x) / screen.width;
+        float yf = (float) (mouse.y - screen.y) / screen.height;
+        if (xf < 0)
+            xf = 0;
+        else if (xf > 1)
+            xf = 1;
+        if (yf < 0)
+            yf = 0;
+        else if (yf > 1)
+            yf = 1;
+        var swapPosi = windowsGrid.ChangeLoc(gridPosi.x, gridPosi.y, xf, yf);
+        if (swapPosi != null) {
+            windowPosi.put(window, swapPosi);
+            windowPosi.put(gridPosi.y.window, gridPosi);
+        }
+        DoLayoutFull();
+    }
+
+    // TODO:
+    @Override
+    public void WindowResize(Window window) {
+        var gridPosi = windowPosi.get(window);
+        if (gridPosi == null)
+            return;
+        windowsGrid.ChangeSize(gridPosi.x, gridPosi.y);
+        switch (windowsGrid.RefreshState) {
             case 1:
                 DoLayoutColumn(gridPosi.x);
                 break;
