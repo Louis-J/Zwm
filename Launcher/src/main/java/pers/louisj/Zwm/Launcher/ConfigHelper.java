@@ -44,7 +44,8 @@ public class ConfigHelper {
         if (!configFile.exists()) {
             // first run
             try {
-                InputStream fins = this.getClass().getClassLoader().getResourceAsStream(DefaultConfigFile);
+                InputStream fins =
+                        this.getClass().getClassLoader().getResourceAsStream(DefaultConfigFile);
                 byte[] buffer = new byte[fins.available()];
                 fins.read(buffer);
                 fins.close();
@@ -55,12 +56,12 @@ public class ConfigHelper {
                 fw.flush();
                 fw.close();
             } catch (IOException e) {
-                throw new Error("Config Error 2" + e);
+                throw new Error("Config Error 2, " + e);
             }
         } else if (!configFile.isFile()) {
-            throw new Error("Config Error 3");
+            throw new Error("Config Error 3, the path is NOT a file");
         } else if (!configFile.canRead()) {
-            throw new Error("Config Error 4");
+            throw new Error("Config Error 4, the file can NOT be read");
         } else {
             try {
                 FileInputStream fins = new FileInputStream(configFile);
@@ -69,13 +70,12 @@ public class ConfigHelper {
                 fins.close();
                 configString = new String(buffer);
             } catch (IOException e) {
-                throw new Error("Config Error 2" + e);
+                throw new Error("Config Error 5, " + e);
             }
         }
     }
 
     public Context GetContext() {
-
         MemCompiler mc = new MemCompiler();
         List<String> options = new ArrayList<>();
         options.add("-XDuseJavaUtilZip");
@@ -90,14 +90,15 @@ public class ConfigHelper {
                 protected Class<?> findClass(String name) throws ClassNotFoundException {
                     ByteArrayOutputStream byteCode = mc.GetClasses().get(name);
                     if (byteCode == null) {
-                        throw new Error("Execute Config Error 1");
+                        throw new Error(
+                                "Execute Config Error, can not find the class of \"" + name + '\"');
                     }
                     return defineClass(name, byteCode.toByteArray(), 0, byteCode.size());
                 }
             };
             configClass = loader.loadClass("Config");
         } catch (ClassNotFoundException e) {
-            throw new Error("Execute Config Error 2: " + e);
+            throw new Error("Execute Config Error 2, " + e);
         }
         if (!IConfig.class.isAssignableFrom(configClass)) {
             throw new Error("Execute Config Error 3");
@@ -106,17 +107,17 @@ public class ConfigHelper {
         try {
             instance = (IConfig) configClass.getDeclaredConstructor().newInstance();
         } catch (InstantiationException e) {
-            throw new Error("Execute Config Error 4: " + e);
+            throw new Error("Execute Config Error 4, " + e);
         } catch (IllegalAccessException e) {
-            throw new Error("Execute Config Error 5: " + e);
+            throw new Error("Execute Config Error 5, " + e);
         } catch (IllegalArgumentException e) {
-            throw new Error("Execute Config Error 6: " + e);
+            throw new Error("Execute Config Error 6, " + e);
         } catch (InvocationTargetException e) {
-            throw new Error("Execute Config Error 7: " + e);
+            throw new Error("Execute Config Error 7, " + e);
         } catch (NoSuchMethodException e) {
-            throw new Error("Execute Config Error 8: " + e);
+            throw new Error("Execute Config Error 8, " + e);
         } catch (SecurityException e) {
-            throw new Error("Execute Config Error 9: " + e);
+            throw new Error("Execute Config Error 9, " + e);
         }
         return instance.GetContext();
     }

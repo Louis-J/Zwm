@@ -102,25 +102,6 @@ public class BarUi {
         widget = new QWidget(mainWindow);
         widget.setObjectName("widget");
         widget.setStyleSheet("background:#363636;");
-        // widget.setStyleSheet(
-        // """
-        // QWidget#widget{background:#363636;}
-        // QLabel#labelTitle{color:white;padding:8px 0px 5px;}
-        // QPushButton#btnMin,QPushButton#btnMax,QPushButton#btnExit{
-        // border-radius:0px;
-        // color: #F0F0F0;
-        // background-color:rgba(0,0,0,0);
-        // border-style:none;
-        // }
-        // QPushButton#btnMin:hover,QPushButton#btnMax:hover{
-        // background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(25,
-        // 134, 199, 0), stop:1 #5CACEE);
-        // }
-        // QPushButton#btnExit:hover{
-        // background-color: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(238, 0,
-        // 0, 128), stop:1 rgba(238, 44, 44, 255));
-        // }
-        // """);
 
         layout = new QHBoxLayout(widget);
         layout.setObjectName("horizontalLayout");
@@ -137,56 +118,12 @@ public class BarUi {
 
         layout.addWidget(btnLogo);
 
-        // scrollArea = new QScrollArea(widget);
-        // scrollArea.setObjectName("scrollArea");
-        // scrollArea
-        // .setSizePolicy(new QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed));
-        // scrollArea.setMaximumSize(300, height - 3);
-        // scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);
-        // scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);
-        // scrollArea.installEventFilter(new QObject() {
-        // @Override
-        // public boolean eventFilter(QObject watched, QEvent event) {
-        // if (event instanceof QWheelEvent) {
-        // var wheelevent = (QWheelEvent) event;
-        // var add = wheelevent.angleDelta().y();
-        // var value = scrollArea.horizontalScrollBar().value();
-        // scrollArea.horizontalScrollBar().setValue(value - add / 5);
-        // return true;
-        // }
-        // return super.eventFilter(watched, event);
-        // }
-        // });
-        // QBoxLayout pLayout = new QHBoxLayout();
-        // pLayout.setContentsMargins(0, 0, 0, 0);
-        // var minsize = new QSize(60, height - 5);
-        // for (int i = 0; i < 10; i++) {
-        // QPushButton pBtn = new QPushButton();
-        // pBtn.setText("Button" + i);
-        // pBtn.setMinimumSize(minsize); // width height
-        // pBtn.setFlat(true);
-        // pBtn.setSizePolicy(
-        // new QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored));
-        // pLayout.addWidget(pBtn);// 把按钮添加到布局控件中
-        // }
-        // scrollAreaWidgetContents = new QWidget();
-        // scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents");
-        // scrollAreaWidgetContents.setGeometry(0, 0, 10 * 60, height - 5);
-        // scrollAreaWidgetContents.adjustSize();
-        // scrollArea.setWidget(scrollAreaWidgetContents);
-        // scrollArea.widget().setLayout(pLayout);// 把布局放置到QScrollArea的内部QWidget中
-        // layout.addWidget(scrollArea);
         vdButtons = new VdButtons(widget);
         layout.addWidget(vdButtons);
 
         labelTitle = new QLabel(widget);
         labelTitle.setObjectName("labelTitle");
         labelTitle.setStyleSheet(BarUi.colorOff);
-        // QFont font = new QFont();
-        // font.setPointSize(9);
-        // font.setBold(true);
-        // labelTitle.setFont(font);
-        // labelTitle.setStyleSheet("");
 
         layout.addWidget(labelTitle);
 

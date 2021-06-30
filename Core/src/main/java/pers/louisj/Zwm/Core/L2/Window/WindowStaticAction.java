@@ -14,8 +14,8 @@ import com.sun.jna.platform.win32.WinDef.LPARAM;
 import com.sun.jna.platform.win32.WinDef.WPARAM;
 
 public abstract class WindowStaticAction {
-    private static final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE | WinUser.SWP_NOCOPYBITS
-            | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
+    private static final int flagNormal = WinUser.SWP_FRAMECHANGED | WinUser.SWP_NOACTIVATE
+            | WinUser.SWP_NOCOPYBITS | WinUser.SWP_NOZORDER | WinUser.SWP_NOOWNERZORDER;
     // private static final int flagMini = flagNormal | WinUser.SWP_NOMOVE |
     // WinUser.SWP_NOSIZE;
 
@@ -37,10 +37,13 @@ public abstract class WindowStaticAction {
                 window.Refresh.RefreshOffset();
                 rectOff = window.Query.GetOffset();
             }
-            var ret = WinHelper.MyUser32Inst.DeferWindowPos(getPointer(), window.hWnd, null, rect.x + rectOff.x,
-                    rect.y + rectOff.y, rect.width + rectOff.width, rect.height + rectOff.height, flagNormal);
+            var ret = WinHelper.MyUser32Inst.DeferWindowPos(getPointer(), window.hWnd, null,
+                    rect.x + rectOff.x, rect.y + rectOff.y, rect.width + rectOff.width,
+                    rect.height + rectOff.height, flagNormal);
             if (ret == null || Pointer.nativeValue(ret) == 0) {
                 var errCode = WinHelper.Kernel32Inst.GetLastError();
+                if (errCode == 5) // no permission, ignore it
+                    return;
                 if (errCode == 1400) // handle err, means the window closed, so ignore it
                     return;
                 var e = new Win32Exception(errCode);
@@ -58,8 +61,8 @@ public abstract class WindowStaticAction {
     }
 
     public static void SetLocation2(Window window, Rectangle location) {
-        if (!WinHelper.MyUser32Inst.SetWindowPos(window.hWnd, null, location.x, location.y, location.width,
-                location.height, flagNormal)) {
+        if (!WinHelper.MyUser32Inst.SetWindowPos(window.hWnd, null, location.x, location.y,
+                location.width, location.height, flagNormal)) {
             var errCode = WinHelper.Kernel32Inst.GetLastError();
             if (errCode == 1400) // handle err, means the window closed, so ignore it
                 return;
@@ -96,6 +99,7 @@ public abstract class WindowStaticAction {
         if (hWnd == null || Pointer.nativeValue(hWnd.getPointer()) == 0)
             return;
 
-        WinHelper.MyUser32Inst.SendNotifyMessage(hWnd, WM_SYSCOMMAND, new WPARAM(SC_CLOSE), new LPARAM(0));
+        WinHelper.MyUser32Inst.SendNotifyMessage(hWnd, WM_SYSCOMMAND, new WPARAM(SC_CLOSE),
+                new LPARAM(0));
     }
 }
