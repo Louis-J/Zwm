@@ -1,8 +1,15 @@
 import pers.louisj.Zwm.Bar.Bar;
 import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Derived.IConfig;
+import pers.louisj.Zwm.Core.Global.Message.Message;
+import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
+import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
+import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDEvent;
+import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
+import pers.louisj.Zwm.Core.L0.KeyBind.KeyCode;
 import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.GridLayout;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouter;
+import pers.louisj.Zwm.Core.Utils.Async.Channel;
 
 public class Config implements IConfig {
     static {
@@ -15,6 +22,7 @@ public class Config implements IConfig {
         Context context = new Context();
 
         context.keyBindMan.DefaultConfig();
+        ConfigCustomKey(context);
         // filterVirtualDesk
         context.filterVirtualDesk.DefaultConfig();
         // For Debug
@@ -46,4 +54,11 @@ public class Config implements IConfig {
 
         return context;
     };
+
+    private void ConfigCustomKey(Context context) {
+        Channel<Message> channelIn = context.mainloop.channelIn;
+
+        context.keyBindMan.Register("Debug VD info", KeyCode.FuncKey.LALT, KeyCode.VK_X,
+                () -> channelIn.put(new VDManMessage(VDManEvent.VDDebugInfo, null)));
+    }
 }

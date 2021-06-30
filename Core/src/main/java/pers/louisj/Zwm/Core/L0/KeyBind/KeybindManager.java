@@ -304,8 +304,5 @@ public class KeybindManager {
                 () -> channelIn.put(new VDMessage(VDEvent.ToggleLayout, null)));
 
         Register("Exit The Program", KeyCode.FuncKey.LALT, KeyCode.VK_Q, () -> context.Exit());
-
-        Register("Debug VD info", KeyCode.FuncKey.LALT, KeyCode.VK_X,
-                () -> channelIn.put(new VDManMessage(VDManEvent.VDDebugInfo, null)));
     }
 }
