@@ -150,13 +150,15 @@ public class VirtualDeskManager {
                 break;
             }
 
-            case WindowForeground:
+            case WindowForeground: {
                 ActionInVD.WindowForeground((Window) msg.param);
                 break;
+            }
 
-            case MonitorForeground:
+            case MonitorForeground: {
                 ActionInVD.MonitorForeground((Point) msg.param);
                 break;
+            }
 
             case VDDebugInfo: {
                 logger.info("VDDebugInfo Start");
@@ -179,6 +181,18 @@ public class VirtualDeskManager {
                 break;
             }
 
+            case WindowMoveResize: {
+                ActionInVD.WindowMoveResize((Window) msg.param);
+                break;
+            }
+            case WindowMinimizeStart: {
+                ActionInVD.WindowToggleMinimize((Window) msg.param, true);
+                break;
+            }
+            case WindowMinimizeEnd: {
+                ActionInVD.WindowToggleMinimize((Window) msg.param, false);
+                break;
+            }
             // TODO: Impl
             case VDAdd:
             case VDRemove:
@@ -213,6 +227,29 @@ public class VirtualDeskManager {
             return window;
         }
 
+        public void WindowToggleMinimize(Window window, boolean isMinimize) {
+            VirtualDesk vd = windowsToVirtualDesk.get(window);
+            vd.ActionLayout.WindowToggleMinimize(window, isMinimize);
+            if (!isMinimize && window.Query.IsFocused()) {
+                vd.lastFocused = window;
+                if (vd.monitor != null) {
+                    if (vd != Query.GetFocusedVD())
+                        ActionGlobal.VDSwitchTo(virtualDesks.indexOf(vd));
+                    else
+                        channelOutRefresh.put(new PluginMessageRefresh(vd));
+                }
+            }
+        }
+
+        public void WindowMoveResize(Window window) {
+            VirtualDesk vd = windowsToVirtualDesk.get(window);
+            if (vd.monitor == null) {
+                logger.info("WindowMoveResize, Window in a cloaked vd");
+                return;
+            }
+            vd.ActionLayout.WindowMoveResize(window);
+        }
+
         private void MoveAllWindowsTo(VirtualDesk source, VirtualDesk target) {
             target.allWindows.addAll(source.allWindows);
             for (var w : source.GetLayoutWindows()) {
@@ -230,19 +267,20 @@ public class VirtualDeskManager {
                 logger.info("WindowAddInit, {}, {}", canLayout, window);
                 window.Action.SetCanLayout(canLayout);
 
-                VirtualDesk target;
-                var monitor = Monitor.GetMonitorByWindow(window);
-                if (monitor != null)
-                    target = monitor.vd;
-                else
-                    target = focusedVD;
+                VirtualDesk target = routerMan.CheckRouter(window);
+                if (target == null) {
+                    var monitor = Monitor.GetMonitorByWindow(window);
+                    if (monitor != null)
+                        target = monitor.vd;
+                    else
+                        target = focusedVD;
+                }
                 target.WindowAdd(window);
                 target.lastFocused = window;
                 windowsToVirtualDesk.put(window, target);
             }
             for (var vd : virtualDesks)
                 channelOutRefresh.put(new PluginMessageRefresh(vd));
-            logger.info("WindowAddInit, PluginMessageFocus");
             channelOutFocus.put(new PluginMessageFocus(focusedVD));
         }
 
@@ -287,7 +325,6 @@ public class VirtualDeskManager {
             vd.lastFocused = window;
             if (focusedIndex != index) {
                 focusedIndex = index;
-                logger.info("WindowForeground, PluginMessageFocus");
                 channelOutFocus.put(new PluginMessageFocus(vd));
             } else
                 channelOutRefresh.put(new PluginMessageRefresh(vd));
@@ -302,7 +339,6 @@ public class VirtualDeskManager {
             } else {
                 focusedIndex = index;
                 m.vd.lastFocused = null;
-                logger.info("MonitorForeground, PluginMessageFocus");
                 channelOutFocus.put(new PluginMessageFocus(m.vd));
             }
         }

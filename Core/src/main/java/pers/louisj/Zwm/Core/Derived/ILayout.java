@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.L2.Window.Window;
+import pers.louisj.Zwm.Core.Utils.Types.Point;
 import pers.louisj.Zwm.Core.Utils.Types.Rectangle;
 
 import java.util.Set;
@@ -41,5 +42,7 @@ public interface ILayout {
 
     public Set<Window> GetWindows();
 
-    public void WindowMoveResize(Window window);
+    public void WindowMove(Window window, Point mouse);
+
+    public void WindowResize(Window window);
 }

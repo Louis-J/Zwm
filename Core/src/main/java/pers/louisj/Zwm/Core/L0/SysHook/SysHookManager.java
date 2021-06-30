@@ -10,7 +10,6 @@ import com.sun.jna.platform.win32.WinDef.DWORD;
 import com.sun.jna.platform.win32.WinDef.HMODULE;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.LONG;
-import com.sun.jna.platform.win32.WinDef.POINT;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.platform.win32.WinUser.WinEventProc;
 import com.sun.jna.platform.win32.WinUser.HHOOK;
@@ -26,12 +25,9 @@ import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Global.Message.Message;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
-import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDEvent;
-import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
 import pers.louisj.Zwm.Core.L2.Window.Window;
 // import pers.louisj.Zwm.Core.Utils.Async.Channel;
 import pers.louisj.Zwm.Core.Utils.Async.ChannelList;
-import pers.louisj.Zwm.Core.Utils.Types.Point;
 import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 public class SysHookManager {
@@ -141,13 +137,14 @@ public class SysHookManager {
                     case EVENT_SYSTEM_MINIMIZESTART: {
                         var window = windows.get(hwnd);
                         if (window != null)
-                            eventChans.put(new VDMessage(VDEvent.WindowMinimizeStart, window));
+                            eventChans
+                                    .put(new VDManMessage(VDManEvent.WindowMinimizeStart, window));
                         break;
                     }
                     case EVENT_SYSTEM_MINIMIZEEND: {
                         var window = windows.get(hwnd);
                         if (window != null)
-                            eventChans.put(new VDMessage(VDEvent.WindowMinimizeEnd, window));
+                            eventChans.put(new VDManMessage(VDManEvent.WindowMinimizeEnd, window));
                         break;
                     }
                     case EVENT_SYSTEM_FOREGROUND: {
@@ -156,17 +153,15 @@ public class SysHookManager {
                             eventChans.put(new VDManMessage(VDManEvent.WindowForeground,
                                     windows.get(hwnd)));
                         else {
-                            POINT p2p = new POINT();
-                            WinHelper.MyUser32Inst.GetCursorPos(p2p);
                             eventChans.put(new VDManMessage(VDManEvent.MonitorForeground,
-                                    new Point(p2p.x, p2p.y)));
+                                    WinHelper.GetMousePoint()));
                         }
                         break;
                     }
                     case EVENT_SYSTEM_MOVESIZEEND: {
                         var window = windows.get(hwnd);
                         if (window != null) {
-                            eventChans.put(new VDMessage(VDEvent.WindowUpdateLocation, window));
+                            eventChans.put(new VDManMessage(VDManEvent.WindowMoveResize, window));
                         }
                         break;
                     }
@@ -189,7 +184,7 @@ public class SysHookManager {
     }
 
     private void WindowRegisterInit(List<HWND> hwnds) {
-        logger.info("WindowRegisterInit, hwnds = {}", hwnds);
+        logger.info("WindowRegisterInit, hwnds.size = {}", hwnds.size());
         List<Window> registered = new ArrayList<>();
         for (var hwnd : hwnds) {
             if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
@@ -208,7 +203,7 @@ public class SysHookManager {
     }
 
     private void WindowRegister(HWND hwnd) {
-        logger.info("WindowRegister, hwnd = {}", hwnd);
+        logger.info("WindowRegister, hwnd = {}", Pointer.nativeValue(hwnd.getPointer()));
         if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
             int id = Window.QueryStatic.GetWindowPid(hwnd);
 

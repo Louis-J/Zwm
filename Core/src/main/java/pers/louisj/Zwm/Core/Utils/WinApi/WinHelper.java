@@ -57,4 +57,10 @@ public class WinHelper {
         } while (Kernel32Inst.GetLastError() == Kernel32.ERROR_INSUFFICIENT_BUFFER);
         throw new Win32Exception(Kernel32Inst.GetLastError());
     }
+
+    public static final Point GetMousePoint() {
+        POINT winPoint = new POINT();
+        WinHelper.MyUser32Inst.GetCursorPos(winPoint);
+        return new Point(winPoint.x, winPoint.y);
+    }
 }

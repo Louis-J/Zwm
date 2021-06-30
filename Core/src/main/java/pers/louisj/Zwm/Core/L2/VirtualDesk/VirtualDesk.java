@@ -10,6 +10,7 @@ import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.Monitor;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouter;
 import pers.louisj.Zwm.Core.L2.Window.Window;
+import pers.louisj.Zwm.Core.Utils.WinApi.WinHelper;
 
 public class VirtualDesk {
     private static Logger logger = LogManager.getLogger("VirtualDesk");
@@ -64,10 +65,19 @@ public class VirtualDesk {
             layout.AreaExpand(lastFocused);
         }
 
-        public void WindowMoveResize() {
-            if (lastFocused == null || layout == null)
+        public void WindowMoveResize(Window window) {
+            if (layout == null)
                 return;
-            layout.WindowMoveResize(lastFocused);
+            var rectOld = window.Query.GetRect();
+            window.Refresh.RefreshRect();
+            var rectNew = window.Query.GetRect();
+            logger.info("WindowMoveResize, rectOld, {}", rectOld);
+            logger.info("WindowMoveResize, rectNew, {}", rectNew);
+            if (rectOld.height == rectNew.height && rectOld.width == rectNew.width) {
+                layout.WindowMove(window, WinHelper.GetMousePoint());
+            } else {
+                layout.WindowResize(window);
+            }
         }
 
         public void WindowToggleMinimize(Window window, boolean isMinimize) {
@@ -75,8 +85,6 @@ public class VirtualDesk {
             if (layout != null) {
                 layout.ToggleMinimize(window, isMinimize);
             }
-            if (!isMinimize && window.Query.IsFocused())
-                lastFocused = window;
         }
 
         public void ResetLayout() {
@@ -283,20 +291,8 @@ public class VirtualDesk {
                 ActionLayout.AreaExpand();
                 break;
             }
-            case WindowUpdateLocation: {
-                ActionLayout.WindowMoveResize();
-                break;
-            }
             case ToggleLayout: {
                 ActionLayout.ToggleLayout();
-                break;
-            }
-            case WindowMinimizeStart: {
-                ActionLayout.WindowToggleMinimize((Window) msg.param, true);
-                break;
-            }
-            case WindowMinimizeEnd: {
-                ActionLayout.WindowToggleMinimize((Window) msg.param, false);
                 break;
             }
             // TODO:
