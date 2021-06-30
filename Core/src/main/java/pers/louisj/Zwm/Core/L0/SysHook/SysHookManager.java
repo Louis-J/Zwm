@@ -117,8 +117,10 @@ public class SysHookManager {
                         break;
                     case EVENT_OBJECT_HIDE: {
                         var window = windows.get(hwnd);
-                        logger.error("WinEventProc, event = EVENT_OBJECT_HIDE, window = {}",
-                                window);
+                        if (window != null) {
+                            if (!window.Action.IsPredictHide())
+                                WindowUnregister(hwnd);
+                        }
                         break;
                     }
                     // TODO: For Debug, Never See

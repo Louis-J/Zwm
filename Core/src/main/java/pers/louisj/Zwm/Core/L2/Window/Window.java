@@ -42,6 +42,8 @@ public class Window {
     private int winStyle;
     private int winStyleEx;
 
+    private volatile int predictHideTime = 0;
+
     public ActionImpl Action = new ActionImpl();
     public RefreshImpl Refresh = new RefreshImpl();
     public QueryImpl Query = new QueryImpl();
@@ -66,6 +68,9 @@ public class Window {
         public void Hide() {
             final int SW_HIDE = 0;
             logger.info("Hide, {}", Window.this);
+            // this line should run before ShowWindow, or event hook will run prior and get a number
+            // '0'
+            predictHideTime++;
             WinHelper.MyUser32Inst.ShowWindow(hWnd, SW_HIDE);
         }
 
@@ -227,6 +232,10 @@ public class Window {
 
         public void SetCanLayout(boolean canLayout) {
             Window.this.canLayout &= canLayout;
+        }
+
+        public boolean IsPredictHide() {
+            return (--predictHideTime) >= 0;
         }
     }
 
