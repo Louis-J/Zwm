@@ -1,8 +1,6 @@
 package pers.louisj.Zwm.Core.Global.Message.VDManMessage;
 
 public enum VDManEvent {
-    VDDebugInfo,
-
     RefreshMonitors,
     SwitchToVD,
     WindowAddInit,

@@ -95,7 +95,7 @@ public class VirtualDeskManager {
                 }
                 for (var vd : virtualDesks)
                     if (!monitors.contains(vd.monitor))
-                        vd.Disable();
+                        vd.ActionVD.Disable();
                 var it = virtualDesks.iterator();
                 for (var m : monitors) {
                     if (m.vd == null) {
@@ -157,27 +157,6 @@ public class VirtualDeskManager {
 
             case MonitorForeground: {
                 ActionInVD.MonitorForeground((Point) msg.param);
-                break;
-            }
-
-            case VDDebugInfo: {
-                logger.info("VDDebugInfo Start");
-                for (var vd : context.vdMan.virtualDesks) {
-                    System.out.println("Begin: " + vd.GetName() + ", size = "
-                            + String.valueOf(vd.allWindows.size()));
-                    System.out.println("monitor: " + vd.monitor);
-                    System.out.println("AllWindows: " + String.valueOf(vd.allWindows.size()));
-                    for (var w : vd.allWindows) {
-                        System.out.println("handle: " + w.hWnd);
-                        System.out.println("pid: " + w.processId);
-                        System.out.println("name: " + w.processName);
-                        System.out.println("class: " + w.windowClass);
-                        System.out.println("title: " + w.windowTitle);
-                        System.out.println();
-                    }
-                    System.out.println("End: " + vd.GetName() + "\n");
-                }
-                logger.info("VDDebugInfo End");
                 break;
             }
 
@@ -244,7 +223,7 @@ public class VirtualDeskManager {
         public void WindowMoveResize(Window window) {
             VirtualDesk vd = windowsToVirtualDesk.get(window);
             if (vd.monitor == null) {
-                logger.info("WindowMoveResize, Window in a cloaked vd");
+                logger.info("WindowMoveResize, Window in a cloaked vd, window = {}", window);
                 return;
             }
             vd.ActionLayout.WindowMoveResize(window);
@@ -253,7 +232,7 @@ public class VirtualDeskManager {
         private void MoveAllWindowsTo(VirtualDesk source, VirtualDesk target) {
             target.allWindows.addAll(source.allWindows);
             for (var w : source.GetLayoutWindows()) {
-                target.WindowAdd(w, true);
+                target.ActionVD.WindowAdd(w);
                 w.Action.ShowNoActive();
             }
             for (var w : source.allWindows)
@@ -275,7 +254,7 @@ public class VirtualDeskManager {
                     else
                         target = focusedVD;
                 }
-                target.WindowAdd(window);
+                target.ActionVD.WindowAdd(window);
                 target.lastFocused = window;
                 windowsToVirtualDesk.put(window, target);
             }
@@ -307,22 +286,23 @@ public class VirtualDeskManager {
 
         public void WindowRemove(Window window) {
             logger.info("WindowRemove, {}", window);
-            VirtualDesk vd = Query.GetFocusedVD();
+            VirtualDesk vd = windowsToVirtualDesk.get(window);
             vd.ActionVD.WindowRemove(window);
             windowsToVirtualDesk.remove(window);
 
-            channelOutRefresh.put(new PluginMessageRefresh(vd));
+            if (vd.monitor != null)
+                channelOutRefresh.put(new PluginMessageRefresh(vd));
         }
 
         public void WindowForeground(Window window) {
             VirtualDesk vd = windowsToVirtualDesk.get(window);
-            if (vd.monitor == null) {
-                logger.info("WindowForeground, Window in a cloaked vd");
-                Query.GetFocusedVD().lastFocused = null;
-                return;
-            }
             int index = virtualDesks.indexOf(vd);
             vd.lastFocused = window;
+            if (vd.monitor == null) {
+                logger.info("WindowForeground, Window in a cloaked vd, window = {}", window);
+                ActionGlobal.VDSwitchTo(index);
+                return;
+            }
             if (focusedIndex != index) {
                 focusedIndex = index;
                 channelOutFocus.put(new PluginMessageFocus(vd));
@@ -357,6 +337,8 @@ public class VirtualDeskManager {
                 if (target.monitor == null) {
                     if (window.Action.Unfocus() == false)
                         ActionGlobal.VDSwitchTo(vdIndex);
+                    else
+                        window.Action.Hide();
                 } else {
                     focusedIndex = vdIndex;
                     logger.info("FocusedWindowMoveTo, PluginMessageFocus");
@@ -387,13 +369,13 @@ public class VirtualDeskManager {
                 var targetM = targetVd.monitor;
 
                 if (targetM != null) {
-                    sourceVd.Enable(targetM);
+                    sourceVd.ActionVD.Enable(targetM);
                     targetM.vd = sourceVd;
                 } else
-                    sourceVd.Disable();
-                targetVd.Enable(sourceM);
+                    sourceVd.ActionVD.Disable();
+                targetVd.ActionVD.Enable(sourceM);
                 sourceM.vd = targetVd;
-                targetVd.Focus();
+                targetVd.ActionVD.Focus();
 
                 focusedIndex = vdindex;
 
@@ -415,15 +397,15 @@ public class VirtualDeskManager {
 
             if (sourceVd != targetVd) {
                 if (targetM != null && targetM != sourceM) {
-                    sourceVd.Enable(targetM);
+                    sourceVd.ActionVD.Enable(targetM);
                     targetM.vd = sourceVd;
                 } else
-                    sourceVd.Disable();
-                targetVd.Enable(sourceM);
+                    sourceVd.ActionVD.Disable();
+                targetVd.ActionVD.Enable(sourceM);
                 sourceM.vd = targetVd;
                 if (Query.GetFocusedVD() == sourceVd) {
                     focusedIndex = vdindex;
-                    targetVd.Focus();
+                    targetVd.ActionVD.Focus();
                 }
 
                 if (targetM == null)

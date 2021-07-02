@@ -2,10 +2,8 @@ import pers.louisj.Zwm.Bar.Bar;
 import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Derived.IConfig;
 import pers.louisj.Zwm.Core.Global.Message.Message;
-import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
-import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
-import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDEvent;
-import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
+import pers.louisj.Zwm.Core.Global.Message.CustomMessage;
+import pers.louisj.Zwm.Core.Global.Message.CustomMessage.CallBack;
 import pers.louisj.Zwm.Core.L0.KeyBind.KeyCode;
 import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.GridLayout;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouter;
@@ -59,6 +57,28 @@ public class Config implements IConfig {
         Channel<Message> channelIn = context.mainloop.channelIn;
 
         context.keyBindMan.Register("Debug VD info", KeyCode.FuncKey.LALT, KeyCode.VK_X,
-                () -> channelIn.put(new VDManMessage(VDManEvent.VDDebugInfo, null)));
+                () -> channelIn.put(new CustomMessage(new CallBack() {
+                    public void Invoke(Context context) {
+                        var logger = Context.logger;
+                        logger.info("DebugInfo Start");
+                        for (var vd : context.vdMan.virtualDesks) {
+                            System.out.println("Begin: " + vd.GetName() + ", size = "
+                                    + String.valueOf(vd.allWindows.size()));
+                            System.out.println("monitor: " + vd.monitor);
+                            System.out
+                                    .println("AllWindows: " + String.valueOf(vd.allWindows.size()));
+                            for (var w : vd.allWindows) {
+                                System.out.println("handle: " + w.hWnd);
+                                System.out.println("pid: " + w.processId);
+                                System.out.println("name: " + w.processName);
+                                System.out.println("class: " + w.windowClass);
+                                System.out.println("title: " + w.windowTitle);
+                                System.out.println();
+                            }
+                            System.out.println("End: " + vd.GetName() + "\n");
+                        }
+                        logger.info("DebugInfo End");
+                    }
+                })));
     }
 }

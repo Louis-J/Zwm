@@ -14,13 +14,13 @@ import pers.louisj.Zwm.Core.PluginMan.PluginManager;
 import pers.louisj.Zwm.Core.Utils.Async.Channel;
 
 public class Context {
-    static Logger logger = LogManager.getLogger("Context");
+    public static Logger logger = LogManager.getLogger("Context");
 
     public PluginManager pluginMan = new PluginManager(this);
     public VirtualDeskManager vdMan = new VirtualDeskManager(this);
     public VirtualDeskFilter filterVirtualDesk = new VirtualDeskFilter();
 
-    public MainLoop mainloop = new MainLoop(vdMan);
+    public MainLoop mainloop = new MainLoop(this, vdMan);
 
     public KeybindManager keyBindMan = new KeybindManager(this);
     public SysHookManager hookMan = new SysHookManager(this);
