@@ -7,19 +7,14 @@ import io.qt.core.*;
 import io.qt.widgets.QApplication;
 
 public abstract class MyEventRet extends QEvent {
-    public final static int typeInt = QEvent.registerEventType();
-    public final static QEvent.Type type = QEvent.Type.resolve(typeInt);
+    final static int typeInt = QEvent.registerEventType();
+    final static QEvent.Type type = QEvent.Type.resolve(typeInt);
 
-    public Lock lock = new ReentrantLock();
-    public Condition condition = lock.newCondition();
-    public Object value;
+    protected Lock lock = new ReentrantLock();
+    protected Condition condition = lock.newCondition();
+    protected Object value;
 
-    public MyEventRet() {
-        super(type);
-        lock.lock();
-    }
-
-    public Object getValue() {
+    protected Object GetValue() {
         try {
             condition.await();
         } catch (InterruptedException e) {
@@ -29,11 +24,16 @@ public abstract class MyEventRet extends QEvent {
         return value;
     }
 
+    public MyEventRet() {
+        super(type);
+        lock.lock();
+    }
+
     public abstract Object Invoke();
 
     @SuppressWarnings("unchecked")
     public final static <T> T Exec(MyEventRet event) {
         QApplication.postEvent(MyEventFilter.qa, event);
-        return (T) event.getValue();
+        return (T) event.GetValue();
     }
 }

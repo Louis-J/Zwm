@@ -14,11 +14,11 @@ public class MyEventFilter extends QObject {
             return true;
         }
         if (event.type().value() == MyEventBlock.typeInt) {
-            MyEventBlock.lock.lock();
             var bbEvent = (MyEventBlock) event;
+            bbEvent.lock.lock();
             bbEvent.Invoke();
-            MyEventBlock.condition.signal();
-            MyEventBlock.lock.unlock();
+            bbEvent.condition.signal();
+            bbEvent.lock.unlock();
             return true;
         }
         if (event.type().value() == MyEventRet.typeInt) {
