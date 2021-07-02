@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import pers.louisj.Zwm.Core.Context;
+import pers.louisj.Zwm.Core.Global.Message.CustomMessage;
 import pers.louisj.Zwm.Core.Global.Message.Message;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
 import pers.louisj.Zwm.Core.Global.Message.VDMessage.VDMessage;
@@ -18,12 +19,14 @@ public class MainLoop extends Thread {
 
     public static Logger logger = LogManager.getLogger("MainLoop");
 
+    protected Context context;
     private final VirtualDeskManager virtualDeskManager;
     public Channel<Message> channelIn = new Channel<>(1024);
     public List<MessageHook> hooks = new ArrayList<>();
 
-    public MainLoop(VirtualDeskManager virtualDeskManager) {
+    public MainLoop(Context context, VirtualDeskManager virtualDeskManager) {
         super();
+        this.context = context;
         this.virtualDeskManager = virtualDeskManager;
         setName("MainLoop Thread");
     }
@@ -68,7 +71,10 @@ public class MainLoop extends Thread {
                 logger.info("MainLoop, VDMessage, {}, {}", vdmsg.event, vdmsg.param);
                 virtualDeskManager.Query.GetFocusedVD().Deal(vdmsg);
             } else {
-                logger.info("MainLoop, UnknownMessage, {}", msg);
+                var cmsg = (CustomMessage) msg;
+                logger.info("MainLoop, CustomMessage, {}", msg);
+                if (cmsg.callback != null)
+                    cmsg.callback.Invoke(context);
             }
         }
     }

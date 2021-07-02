@@ -41,7 +41,7 @@ public class KeybindManager {
         public LRESULT callback(int nCode, WPARAM wParam, MSLLHOOKSTRUCT lParam) {
             return MouseBindCallBack(nCode, wParam, lParam);
         }
-    };;
+    };
 
     private HashMap<Short, CallBack> keybinds = new HashMap<>();
     private HashMap<Short, CallBack> mousebinds = new HashMap<>();
@@ -58,15 +58,15 @@ public class KeybindManager {
         HMODULE hModule = WinHelper.Kernel32Inst.GetModuleHandle(null);
         hHookKey = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_KEYBOARD_LL, keyHook,
                 hModule, 0);
-        hHookMouse = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_MOUSE_LL, mouseHook,
-                hModule, 0);
+        // hHookMouse = WinHelper.MyUser32Inst.SetWindowsHookEx(MyUser32.WH_MOUSE_LL, mouseHook,
+        //         hModule, 0);
     }
 
     public void Defer() {
         if (hHookKey != null)
             WinHelper.MyUser32Inst.UnhookWindowsHookEx(hHookKey);
-        if (hHookMouse != null)
-            WinHelper.MyUser32Inst.UnhookWindowsHookEx(hHookMouse);
+        // if (hHookMouse != null)
+        //     WinHelper.MyUser32Inst.UnhookWindowsHookEx(hHookMouse);
     }
 
     public void Register(String name, int funcKey, int key, CallBack callback) {

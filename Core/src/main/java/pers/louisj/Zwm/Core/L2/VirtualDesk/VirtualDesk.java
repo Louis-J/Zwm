@@ -107,8 +107,6 @@ public class VirtualDesk {
 
             if (monitor == null)
                 window.Action.Hide();
-            else
-                window.Action.ShowNoActive();
 
             if (layout != null && window.Query.CanLayout()) {
                 layout.WindowAdd(window);
@@ -193,72 +191,6 @@ public class VirtualDesk {
 
     public boolean isEmpty() {
         return allWindows.size() == 0;
-    }
-    // public Window GetLastFocusedWindow() {
-    // return allWindows.iterator().next();
-    // }
-
-    public void WindowAdd(Window window) {
-        logger.info("AddWindow, {}", window);
-        allWindows.add(window);
-
-        if (monitor == null)
-            window.Action.Hide();
-        else
-            window.Action.ShowNoActive();
-
-        if (layout != null && window.Query.CanLayout()) {
-            layout.WindowAdd(window);
-            // window.Action.DecorateEnable();
-        }
-    }
-
-    public void WindowAdd(Window window, boolean isLayout) {
-        logger.info("AddWindow, {}, {}", window, isLayout);
-        allWindows.add(window);
-
-        if (layout != null && isLayout) {
-            layout.WindowAdd(window);
-            // window.Action.DecorateEnable();
-        }
-    }
-
-    public void WindowRemove(Window window) {
-        logger.info("RemoveWindow, {}", window);
-        allWindows.remove(window);
-
-        if (layout != null && window.Query.CanLayout()) {
-            layout.WindowRemove(window);
-        }
-        if (lastFocused == window)
-            lastFocused = null;
-    }
-
-    public void ResetLayout() {
-        if (layout != null) {
-            layout.ResetLayout();
-        }
-    }
-
-    public void Focus() {
-        if (lastFocused != null)
-            lastFocused.Action.Focus();
-    }
-
-    public void Enable(Monitor monitor) {
-        for (var w : allWindows)
-            w.Action.ShowNoActive();
-        this.monitor = monitor;
-        if (layout != null)
-            layout.Enable(monitor.GetWorkingRect());
-    }
-
-    public void Disable() {
-        this.monitor = null;
-        for (var w : allWindows)
-            w.Action.Hide();
-        if (layout != null)
-            layout.Disable();
     }
 
     public void Deal(VDMessage msg) {

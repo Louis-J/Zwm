@@ -7,11 +7,20 @@ import io.qt.core.*;
 import io.qt.widgets.QApplication;
 
 public abstract class MyEventBlock extends QEvent {
-    public final static int typeInt = QEvent.registerEventType();
-    public final static QEvent.Type type = QEvent.Type.resolve(typeInt);
+    final static int typeInt = QEvent.registerEventType();
+    final static QEvent.Type type = QEvent.Type.resolve(typeInt);
 
-    public static Lock lock = new ReentrantLock();
-    public static Condition condition = lock.newCondition();
+    protected Lock lock = new ReentrantLock();
+    protected Condition condition = lock.newCondition();
+
+    protected void Join() {
+        try {
+            condition.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        lock.unlock();
+    }
 
     public MyEventBlock() {
         super(type);
@@ -19,16 +28,6 @@ public abstract class MyEventBlock extends QEvent {
     }
 
     public abstract void Invoke();
-
-    public void Join() {
-        try {
-            MyEventBlock.condition.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        MyEventBlock.lock.unlock();
-    }
-    
 
     public final static void Exec(MyEventBlock event) {
         QApplication.postEvent(MyEventFilter.qa, event);

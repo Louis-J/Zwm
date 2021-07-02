@@ -4,8 +4,8 @@ import io.qt.core.*;
 import io.qt.widgets.*;
 
 public abstract class MyEvent extends QEvent {
-    public final static int typeInt = QEvent.registerEventType();
-    public final static QEvent.Type type = QEvent.Type.resolve(typeInt);
+    final static int typeInt = QEvent.registerEventType();
+    final static QEvent.Type type = QEvent.Type.resolve(typeInt);
 
     public MyEvent() {
         super(type);
