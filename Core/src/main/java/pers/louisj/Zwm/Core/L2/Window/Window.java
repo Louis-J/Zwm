@@ -43,6 +43,7 @@ public class Window {
     private int winStyleEx;
 
     private volatile int predictHideTime = 0;
+    private volatile int predictFocusTime = 0;
 
     public ActionImpl Action = new ActionImpl();
     public RefreshImpl Refresh = new RefreshImpl();
@@ -51,6 +52,7 @@ public class Window {
     public class ActionImpl {
         public void Focus() {
             logger.info("Focus, {}", Window.this);
+            predictFocusTime++;
             WinHelper.MyUser32Inst.SetForegroundWindow(hWnd);
         }
 
@@ -237,6 +239,10 @@ public class Window {
         public boolean IsPredictHide() {
             return (--predictHideTime) >= 0;
         }
+
+        public boolean IsPredictFocus() {
+            return (--predictFocusTime) >= 0;
+        }
     }
 
     public class RefreshImpl {
@@ -402,7 +408,7 @@ public class Window {
     }
 
     public Window(HWND handle, int processId) {
-        logger.info("Window, handle = {}", handle);
+        logger.info("Window, handle = {}", Pointer.nativeValue(handle.getPointer()));
         this.hWnd = handle;
         this.processId = processId;
 

@@ -118,8 +118,14 @@ public class SysHookManager {
                     case EVENT_OBJECT_HIDE: {
                         var window = windows.get(hwnd);
                         if (window != null) {
-                            if (!window.Action.IsPredictHide())
+                            if (!window.Action.IsPredictHide()) {
+                                logger.info("UnPredictHide, hwnd = {}",
+                                        Pointer.nativeValue(hwnd.getPointer()));
                                 WindowUnregister(hwnd);
+                            } else {
+                                logger.info("PredictHide, hwnd = {}",
+                                        Pointer.nativeValue(hwnd.getPointer()));
+                            }
                         }
                         break;
                     }
@@ -138,31 +144,47 @@ public class SysHookManager {
                     }
                     case EVENT_SYSTEM_MINIMIZESTART: {
                         var window = windows.get(hwnd);
-                        if (window != null)
+                        if (window != null) {
+                            logger.info("WindowMinimizeStart, hwnd = {}",
+                                    Pointer.nativeValue(hwnd.getPointer()));
                             eventChans
                                     .put(new VDManMessage(VDManEvent.WindowMinimizeStart, window));
+                        }
                         break;
                     }
                     case EVENT_SYSTEM_MINIMIZEEND: {
                         var window = windows.get(hwnd);
-                        if (window != null)
+                        if (window != null) {
+                            logger.info("WindowMinimizeEnd, hwnd = {}",
+                                    Pointer.nativeValue(hwnd.getPointer()));
                             eventChans.put(new VDManMessage(VDManEvent.WindowMinimizeEnd, window));
+                        }
                         break;
                     }
                     case EVENT_SYSTEM_FOREGROUND: {
                         var window = windows.get(hwnd);
-                        if (window != null)
-                            eventChans.put(new VDManMessage(VDManEvent.WindowForeground,
-                                    windows.get(hwnd)));
-                        else {
-                            eventChans.put(new VDManMessage(VDManEvent.MonitorForeground,
-                                    WinHelper.GetMousePoint()));
+                        if (window != null) {
+                            if (!window.Action.IsPredictFocus()) {
+                                logger.info("WindowForeground, UnPredictFocus, hwnd = {}",
+                                        Pointer.nativeValue(hwnd.getPointer()));
+                                eventChans.put(new VDManMessage(VDManEvent.WindowForeground,
+                                        windows.get(hwnd)));
+                            } else {
+                                logger.info("WindowForeground, PredictFocus, hwnd = {}",
+                                        Pointer.nativeValue(hwnd.getPointer()));
+                            }
+                        } else {
+                            var point = WinHelper.GetMousePoint();
+                            logger.info("MonitorForeground, posi = {}", point);
+                            eventChans.put(new VDManMessage(VDManEvent.MonitorForeground, point));
                         }
                         break;
                     }
                     case EVENT_SYSTEM_MOVESIZEEND: {
                         var window = windows.get(hwnd);
                         if (window != null) {
+                            logger.info("WindowMoveResize, hwnd = {}",
+                                    Pointer.nativeValue(hwnd.getPointer()));
                             eventChans.put(new VDManMessage(VDManEvent.WindowMoveResize, window));
                         }
                         break;
@@ -170,6 +192,8 @@ public class SysHookManager {
                     case EVENT_OBJECT_NAMECHANGE:
                         var window = windows.get(hwnd);
                         if (window != null) {
+                            logger.info("WindowTitleChange, hwnd = {}",
+                                    Pointer.nativeValue(hwnd.getPointer()));
                             eventChans.put(new VDManMessage(VDManEvent.WindowTitleChange, window));
                         }
                         break;
@@ -205,8 +229,8 @@ public class SysHookManager {
     }
 
     private void WindowRegister(HWND hwnd) {
-        logger.info("WindowRegister, hwnd = {}", Pointer.nativeValue(hwnd.getPointer()));
         if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
+            logger.info("WindowRegister, hwnd = {}", Pointer.nativeValue(hwnd.getPointer()));
             int id = Window.QueryStatic.GetWindowPid(hwnd);
 
             var window = new Window(hwnd, id);
