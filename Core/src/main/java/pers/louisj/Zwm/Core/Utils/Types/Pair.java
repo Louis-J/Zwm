@@ -9,6 +9,7 @@ public class Pair<T1, T2> {
         this.t2 = t2;
     }
 
+    @Override
     public String toString() {
         return "Pair(" + t1 + ", " + t2 + ")";
     }
