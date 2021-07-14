@@ -23,10 +23,10 @@ public class PluginManager {
         }
     }
 
-    public void BeforeRun() {
+    public void Start() {
         for (var pair : plugins.entrySet()) {
-            logger.info("BeforeRun, {}", pair.getKey());
-            pair.getValue().BeforeRun();
+            logger.info("Start, {}", pair.getKey());
+            pair.getValue().Start();
         }
     }
 

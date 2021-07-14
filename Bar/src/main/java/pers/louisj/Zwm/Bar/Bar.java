@@ -8,7 +8,7 @@ public class Bar implements IPlugin {
 
     @Override
     public void Init(Context context) {
-        msgLoop= new MsgLoop(logger, this, context);
+        msgLoop = new MsgLoop(logger, this, context);
         context.vdMan.channelOutFocus.add(msgLoop.channelIn);
         context.vdMan.channelOutRefresh.add(msgLoop.channelIn);
         context.vdMan.channelOutMonitors.add(msgLoop.channelIn);
@@ -29,7 +29,7 @@ public class Bar implements IPlugin {
     public void DefultConfig() {}
 
     @Override
-    public void BeforeRun() {
+    public void Start() {
         msgLoop.Start();
     }
 

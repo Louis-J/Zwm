@@ -19,7 +19,7 @@ public interface IPlugin {
 
     public void DefultConfig();
 
-    public void BeforeRun();
+    public void Start();
 
     public void Defer(); // for some languages using deconstractor to release resources
 

@@ -39,7 +39,7 @@ public class Launcher {
         // init windowhook
         context.pluginMan.Init();
 
-        context.pluginMan.BeforeRun();
+        context.pluginMan.Start();
 
         logger.info("Run message loop in Main");
         context.Start();
