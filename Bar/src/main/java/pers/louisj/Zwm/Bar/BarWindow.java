@@ -26,14 +26,14 @@ public class BarWindow extends QMainWindow {
         setWindowFlags(WindowType.Tool, WindowType.WindowStaysOnTopHint,
                 WindowType.FramelessWindowHint);
 
-        setGeometry(rect.x, rect.y, rect.width, BarUi.height);
+        setGeometry(rect.x, rect.y, rect.width, Bar.config.BarHeight);
         appBarData = new APPBARDATA();
         appBarData.cbSize.setValue(appBarData.size());
         appBarData.hWnd.setPointer(new Pointer(winId()));
         appBarData.rc.left = rect.x;
         appBarData.rc.top = rect.y;
         appBarData.rc.right = rect.x + rect.width;
-        appBarData.rc.bottom = rect.y + BarUi.height;
+        appBarData.rc.bottom = rect.y + Bar.config.BarHeight;
         appBarData.uEdge.setValue(ShellAPI.ABE_TOP);
 
         abmCode.setValue(ShellAPI.ABM_NEW);
@@ -51,12 +51,14 @@ public class BarWindow extends QMainWindow {
     }
 
     public void Resize(Rectangle rect) {
-        setGeometry(rect.x, rect.y, rect.width, BarUi.height);
+        setGeometry(rect.x, rect.y, rect.width, Bar.config.BarHeight);
 
         appBarData.rc.left = rect.x;
         appBarData.rc.top = rect.y;
         appBarData.rc.right = rect.x + rect.width;
-        appBarData.rc.bottom = rect.y + BarUi.height;
+        appBarData.rc.bottom = rect.y + Bar.config.BarHeight;
+        abmCode.setValue(ShellAPI.ABM_NEW);
+        Shell32.INSTANCE.SHAppBarMessage(abmCode, appBarData);
         abmCode.setValue(ShellAPI.ABM_SETPOS);
         Shell32.INSTANCE.SHAppBarMessage(abmCode, appBarData);
     }

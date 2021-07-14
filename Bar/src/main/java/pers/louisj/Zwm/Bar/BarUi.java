@@ -15,12 +15,17 @@ import io.qt.widgets.*;
 class VdButtons extends QScrollArea {
     public QWidget widgetContents;
     public List<QPushButton> btns = new ArrayList<>();
+    protected String styleSheetOn = "font-size:" + Bar.config.vdButtonFontSize + "px;color:"
+            + Bar.config.vdButtonFontColorOn + ";";
+    protected String styleSheetOff = "font-size:" + Bar.config.vdButtonFontSize + "px;color:"
+            + Bar.config.vdButtonFontColorOff + ";";
 
     public VdButtons(QWidget parent) {
         super(parent);
         setObjectName("scrollArea");
         setSizePolicy(new QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed));
-        setMaximumSize(240, BarUi.height - 3);
+        setMaximumSize(Bar.config.vdButtonMaxLen, Bar.config.BarHeight - 3);
+        // setFixedSize(Bar.config.vdButtonMaxLen, Bar.config.BarHeight - 3);
         setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);
         setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff);
         installEventFilter(new QObject() {
@@ -38,40 +43,53 @@ class VdButtons extends QScrollArea {
         });
         widgetContents = new QWidget(this);
         widgetContents.setObjectName("scrollAreaWidgetContents");
+        widgetContents.setContentsMargins(0, 0, 0, 0);
         setWidget(widgetContents);
     }
 
     void Refresh(List<VirtualDesk> vds, Context context, Monitor monitor) {
         QBoxLayout layout = new QHBoxLayout(this);
         layout.setContentsMargins(0, 0, 0, 0);
-        // final var minsize = new QSize(60, BarUi.height - 5);
+        // final var minsize = new QSize(60, Bar.config.BarHeight - 5);
         final var policy = new QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored);
 
-        for(var c : widgetContents.findChildren()) {
+        for (var c : widgetContents.findChildren()) {
             c.dispose();
         }
         btns = new ArrayList<>();
+        int widthall = 0;
 
+        QFont font = new QFont();
+        font.setPixelSize(Bar.config.vdButtonFontSize);
+        QFontMetrics fmwelcome = new QFontMetrics(font);
         for (int i = 0; i < vds.size(); i++) {
             var vd = vds.get(i);
             QPushButton pBtn = new QPushButton();
-            pBtn.setText(vd.GetName());
+            String text = vd.GetName();
             // pBtn.setMinimumSize(minsize);
             pBtn.setFlat(true);
             pBtn.setSizePolicy(policy);
-            pBtn.setStyleSheet("font-size:" + 22 + "px;color:#F0F0F0;");
+            pBtn.setStyleSheet(styleSheetOff);
+            int width = fmwelcome.boundingRect(text).width() + 10;
+            // pBtn.setMinimumWidth(width);
+            // pBtn.setMaximumWidth(width);
+            pBtn.setFixedWidth(width);
+            pBtn.setText(text);
+            widthall += width;
             layout.addWidget(pBtn);
             var msgParam = new Pair<>(monitor, Integer.valueOf(i));
             pBtn.clicked.connect(() -> context.mainloop.channelIn
                     .put(new VDManMessage(VDManEvent.SwitchMonitorToVD, msgParam)));
             btns.add(pBtn);
         }
-        widgetContents.setGeometry(0, 0, vds.size() * 60, BarUi.height - 5);
+        widgetContents.setGeometry(0, 0,
+                Math.max(Bar.config.vdButtonMaxLen - 2, widthall + vds.size() * 5),
+                Bar.config.BarHeight - 5);
         widgetContents.setLayout(layout);
     }
 
     public void HighLight(int index) {
-        btns.get(index).setStyleSheet("font-size:" + 22 + "px;color:#f0B060;");
+        btns.get(index).setStyleSheet(styleSheetOn);
     }
 }
 
@@ -81,10 +99,6 @@ public class BarUi {
     public QBoxLayout layout;
     public QPushButton btnLogo;
     // for chosing vd
-    // public QScrollArea scrollArea;
-    // public QWidget scrollAreaWidgetContents;
-    // public QWidget horizontalLayoutWidget;
-    // public QBoxLayout horizontalLayout;
     public VdButtons vdButtons;
     // for chosing vd end
     public QLabel labelTitle;
@@ -92,11 +106,11 @@ public class BarUi {
     public QLabel labelBattery;
     public QLabel labelTime;
 
-    public static final int fontSize = 25;
-    public static final String fontSizeStr = "font-size:" + fontSize + "px;";
-    public static final String colorOn = fontSizeStr + "color:#f0B060;";
-    public static final String colorOff = fontSizeStr + "color:#F0F0F0;";
-    public static final int height = 35;
+    // public static final String fontSizeStr =
+    // "font-size:" + Bar.config.labelTitleFontSize + "px;color:";
+    // public static final String colorOn = fontSizeStr + Bar.config.labelTitleFontColorOn + ";";
+    // public static final String colorOff = fontSizeStr + Bar.config.labelTitleFontColorOff + ";";
+    // public static final int BarHeight = 35;
 
     public BarUi(QMainWindow mainWindow) {
         widget = new QWidget(mainWindow);
@@ -112,7 +126,7 @@ public class BarUi {
         btnLogo.setObjectName("btnLogo");
         btnLogo.setSizePolicy(
                 new QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred));
-        btnLogo.setMaximumSize(height, height);
+        btnLogo.setMaximumSize(Bar.config.BarHeight, Bar.config.BarHeight);
         btnLogo.setAutoDefault(true);
         btnLogo.setFlat(true);
 
@@ -123,7 +137,7 @@ public class BarUi {
 
         labelTitle = new QLabel(widget);
         labelTitle.setObjectName("labelTitle");
-        labelTitle.setStyleSheet(BarUi.colorOff);
+        labelTitle.setStyleSheet(Bar.labelTitleStyleSheetOff);
 
         layout.addWidget(labelTitle);
 
