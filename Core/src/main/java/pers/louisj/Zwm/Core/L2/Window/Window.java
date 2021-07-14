@@ -407,48 +407,6 @@ public class Window {
         }
     }
 
-    public Window(HWND handle, int processId) {
-        logger.info("Window, handle = {}", Pointer.nativeValue(handle.getPointer()));
-        this.hWnd = handle;
-        this.processId = processId;
-
-        logger.info("Window, processId = {}", processId);
-        try {
-            final int PROCESS_QUERY_INFORMATION = 0x0400;
-            final int PROCESS_VM_READ = 0x0010;
-            HANDLE hProc = WinHelper.Kernel32Inst
-                    .OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, processId);
-            processName = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
-                @Override
-                public int Invoke(char[] buffer, int size) {
-                    return WinHelper.PsapiInst.GetModuleFileNameExW(hProc, null, buffer, size);
-                }
-            }, WinDef.MAX_PATH);
-            WinHelper.Kernel32Inst.CloseHandle(hProc);
-        } catch (Win32Exception e) {
-            processName = "";
-        }
-
-        windowClass = WinHelper.QueryWithBuffer1(new WinHelper.CallBackWithBuffer1() {
-            @Override
-            public int Invoke(char[] buffer, int size) {
-                return WinHelper.MyUser32Inst.GetClassName(handle, buffer, size);
-            }
-        }, 128);
-
-        Refresh.RefreshTitle();
-
-        Refresh.RefreshState();
-
-        Refresh.RefreshWindowStyles();
-
-        Refresh.RefreshRect();
-        Refresh.RefreshOffset();
-
-        Refresh.RefreshIsCloaked();
-        Refresh.RefreshCanLayout();
-    }
-
     public Window(HWND handle) {
         this.hWnd = handle;
         processId = Window.QueryStatic.GetWindowPid(handle);;

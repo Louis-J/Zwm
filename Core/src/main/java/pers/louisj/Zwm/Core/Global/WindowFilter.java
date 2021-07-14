@@ -13,6 +13,7 @@ import org.ahocorasick.trie.Trie;
 
 public abstract class WindowFilter {
     public interface FilterCallBack {
+        // return true to prevent the configure of the window
         public boolean Invoke(Window w);
     }
 

@@ -123,5 +123,5 @@ public class ConfigHelper {
     }
 
     protected static String DefaultConfigFile = "Config.java";
-    protected static String DirectName = "\\.ZwmDebug";
+    protected static String DirectName = "\\.Zwm";
 }
