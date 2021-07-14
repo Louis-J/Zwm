@@ -212,9 +212,7 @@ public class SysHookManager {
         List<Window> registered = new ArrayList<>();
         for (var hwnd : hwnds) {
             if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
-                int id = Window.QueryStatic.GetWindowPid(hwnd);
-
-                var window = new Window(hwnd, id);
+                var window = new Window(hwnd);
                 if (context.filterVirtualDesk.CheckMatch(window)) {
                     logger.info("WindowRegister, Ignored, {}", window);
                     continue;
@@ -229,9 +227,7 @@ public class SysHookManager {
     private void WindowRegister(HWND hwnd) {
         if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
             logger.info("WindowRegister, hwnd = {}", Pointer.nativeValue(hwnd.getPointer()));
-            int id = Window.QueryStatic.GetWindowPid(hwnd);
-
-            var window = new Window(hwnd, id);
+            var window = new Window(hwnd);
             if (context.filterVirtualDesk.CheckMatch(window)) {
                 logger.info("WindowRegister, Ignored, {}", window);
                 return;
