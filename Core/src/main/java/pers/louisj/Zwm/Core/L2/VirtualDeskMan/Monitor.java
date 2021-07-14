@@ -41,6 +41,10 @@ public class Monitor {
         name = new String(info.szDevice);
     }
 
+    public Rectangle GetAllRect() {
+        return aeraAll;
+    }
+
     public Rectangle GetWorkingRect() {
         return aeraWorking;
     }
@@ -56,6 +60,10 @@ public class Monitor {
     }
 
     public static Set<Monitor> GetMonitors() {
+        return new HashSet<Monitor>(monitorMap.values());
+    }
+
+    public static void RefreshMonitors() {
         Map<HMONITOR, Monitor> newMap = new LinkedHashMap<>();
 
         WinHelper.MyUser32Inst.EnumDisplayMonitors(null, null, (hMonitor, hdc, rect, lparam) -> {
@@ -69,7 +77,6 @@ public class Monitor {
             return 1;
         }, null);
         monitorMap = newMap;
-        return new HashSet<Monitor>(newMap.values());
     }
 
     public static Monitor GetMonitorByHwnd(HWND hwnd) {

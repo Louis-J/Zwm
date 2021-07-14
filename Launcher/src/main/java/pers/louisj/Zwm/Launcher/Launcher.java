@@ -30,8 +30,6 @@ public class Launcher {
         Context context = ch.GetContext();
         if (context == null)
             throw new Error("context is null!");
-            
-        context.mainloop.channelIn.put(new VDManMessage(VDManEvent.RefreshMonitors, null));
 
         context.filterVirtualDesk.Build();
         context.vdMan.filterLayout.Build();
@@ -39,6 +37,7 @@ public class Launcher {
         // init windowhook
         context.pluginMan.Init();
 
+        context.vdMan.Start();
         context.pluginMan.Start();
 
         logger.info("Run message loop in Main");

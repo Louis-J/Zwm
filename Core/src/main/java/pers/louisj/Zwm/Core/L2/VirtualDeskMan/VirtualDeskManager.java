@@ -63,6 +63,10 @@ public class VirtualDeskManager {
         this.context = context;
     }
 
+    public void Start() {
+        ActionGlobal.RefreshMonitors();
+    }
+
     public void Exit() {
         logger.info("VDMan, Exit");
         var target = Query.GetFocusedVD();
@@ -89,25 +93,7 @@ public class VirtualDeskManager {
             }
 
             case RefreshMonitors: {
-                var monitors = Monitor.GetMonitors();
-                while (monitors.size() > virtualDesks.size()) {
-                    ActionGlobal.VDAdd(defaultVDFunc.Invoke());
-                }
-                for (var vd : virtualDesks)
-                    if (!monitors.contains(vd.monitor))
-                        vd.ActionVD.Disable();
-                var it = virtualDesks.iterator();
-                for (var m : monitors) {
-                    if (m.vd == null) {
-                        VirtualDesk vd;
-                        for (vd = it.next(); vd.monitor != null; vd = it.next()) {
-                        }
-                        vd.ActionVD.Enable(m);
-                        m.vd = vd;
-                    }
-                }
-                channelOutMonitors
-                        .put(new PluginMessageMonitors(new ArrayList<VirtualDesk>(virtualDesks)));
+                ActionGlobal.RefreshMonitors();
                 break;
             }
 
@@ -414,6 +400,32 @@ public class VirtualDeskManager {
                     channelOutVDs.put(new PluginMessageVDs(targetVd, sourceVd));
             }
             logger.info("VDSwitchTo, END");
+        }
+
+        public void RefreshMonitors() {
+            Monitor.RefreshMonitors();
+            var monitors = Monitor.GetMonitors();
+            while (monitors.size() > virtualDesks.size()) {
+                ActionGlobal.VDAdd(defaultVDFunc.Invoke());
+            }
+            for (var vd : virtualDesks) {
+                if (!monitors.contains(vd.monitor))
+                    vd.ActionVD.Disable();
+                else
+                    vd.ActionVD.Enable(vd.monitor);
+            }
+            var it = virtualDesks.iterator();
+            for (var m : monitors) {
+                if (m.vd == null) {
+                    VirtualDesk vd;
+                    for (vd = it.next(); vd.monitor != null; vd = it.next()) {
+                    }
+                    vd.ActionVD.Enable(m);
+                    m.vd = vd;
+                }
+            }
+            channelOutMonitors
+                    .put(new PluginMessageMonitors(new ArrayList<VirtualDesk>(virtualDesks)));
         }
     }
 }

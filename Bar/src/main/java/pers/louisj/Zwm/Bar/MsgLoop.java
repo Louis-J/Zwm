@@ -80,8 +80,65 @@ public class MsgLoop extends QThread {
 
     public void Start() {
         qa = QApplication.instance();
-        // debugBarWindow.show();
+        RefreshMonitorsInit();
+        QThread.msleep(200);
+        context.vdMan.ActionGlobal.RefreshMonitors();
         this.start();
+    }
+
+    protected void RefreshMonitorsInit() {
+        Set<Monitor> monitors = Monitor.GetMonitors();
+        Map<Monitor, BarWindow> newMap = new HashMap<>();
+        for (var m : monitors) {
+            if (!barMap.containsKey(m)) {
+                var barW = new BarWindow(m.GetWorkingRect());
+                barW.show();
+                newMap.put(m, barW);
+            }
+        }
+        barMap.putAll(newMap);
+    }
+
+    protected void RefreshMonitors() {
+        MyEventBlock.Exec(new MyEventBlock() {
+            public void Invoke() {
+                for (var p : barMap.entrySet())
+                    p.getValue().Defer();
+            }
+        });
+        Monitor.RefreshMonitors();
+        Set<Monitor> monitors = Monitor.GetMonitors();
+
+        Set<BarWindow> removeBarWindows = new HashSet<>();
+        for (var p : barMap.entrySet()) {
+            if (!monitors.contains(p.getKey())) {
+                removeBarWindows.add(barMap.remove(p.getKey()));
+            }
+        }
+        MyEventBlock.Exec(new MyEventBlock() {
+            public void Invoke() {
+                for (var w : removeBarWindows) {
+                    w.close();
+                }
+                for (var p : barMap.entrySet()) {
+                    p.getValue().Resize(p.getKey().GetWorkingRect());
+                }
+            }
+        });
+        Map<Monitor, BarWindow> newMap = MyEventRet.Exec(new MyEventRet() {
+            public Map<Monitor, BarWindow> Invoke() {
+                Map<Monitor, BarWindow> newMap = new HashMap<>();
+                for (var m : monitors) {
+                    if (!barMap.containsKey(m)) {
+                        var barW = new BarWindow(m.GetWorkingRect());
+                        barW.show();
+                        newMap.put(m, barW);
+                    }
+                }
+                return newMap;
+            }
+        });
+        barMap.putAll(newMap);
     }
 
     @Override
@@ -105,14 +162,15 @@ public class MsgLoop extends QThread {
                             var lastBar = barMap.get(lastFocused);
                             MyEvent.Exec(new MyEvent() {
                                 public void Invoke() {
-                                    lastBar.ui.labelTitle.setStyleSheet(BarUi.colorOff);
+                                    lastBar.ui.labelTitle
+                                            .setStyleSheet(Bar.labelTitleStyleSheetOff);
                                 }
                             });
                         }
                         var thisBar = barMap.get(monitor);
                         MyEvent.Exec(new MyEvent() {
                             public void Invoke() {
-                                thisBar.ui.labelTitle.setStyleSheet(BarUi.colorOn);
+                                thisBar.ui.labelTitle.setStyleSheet(Bar.labelTitleStyleSheetOn);
                             }
                         });
                         lastFocused = monitor;
@@ -219,37 +277,7 @@ public class MsgLoop extends QThread {
                 case Custom: {
                     var pmsg = (PluginMessageCustom) msg;
                     synchronized (pmsg.obj) {
-                        Set<Monitor> monitors = Monitor.GetMonitors();
-                        Set<BarWindow> removeBarWindows = new HashSet<>();
-                        for (var p : barMap.entrySet()) {
-                            if (!monitors.contains(p.getKey())) {
-                                removeBarWindows.add(barMap.remove(p.getKey()));
-                            }
-                        }
-                        MyEventBlock.Exec(new MyEventBlock() {
-                            public void Invoke() {
-                                for (var w : removeBarWindows) {
-                                    w.Defer();
-                                }
-                                for (var p : barMap.entrySet()) {
-                                    p.getValue().Resize(p.getKey().GetWorkingRect());
-                                }
-                            }
-                        });
-                        Map<Monitor, BarWindow> newMap = MyEventRet.Exec(new MyEventRet() {
-                            public Map<Monitor, BarWindow> Invoke() {
-                                Map<Monitor, BarWindow> newMap = new HashMap<>();
-                                for (var m : monitors) {
-                                    if (!barMap.containsKey(m)) {
-                                        var barW = new BarWindow(m.GetWorkingRect());
-                                        barW.show();
-                                        newMap.put(m, barW);
-                                    }
-                                }
-                                return newMap;
-                            }
-                        });
-                        barMap.putAll(newMap);
+                        RefreshMonitors();
                         pmsg.obj.notify();
                     }
                     break;
