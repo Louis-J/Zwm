@@ -31,6 +31,7 @@ public class Context {
     }
 
     public void Start() {
+        hookMan.Start();
         keyBindMan.Start();
         mainloop.Start();
         msgloop.run();

@@ -66,7 +66,7 @@ public class SysHookManager {
         this.context = context;
     }
 
-    public void Init() {
+    public void Start() {
         hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE,
                 new HMODULE(), windowHook, 0, 0, 0));
         hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_CLOAKED,
@@ -90,8 +90,6 @@ public class SysHookManager {
         }, null);
         WindowRegisterInit(hwnds);
     }
-
-    public void Start() {}
 
     public void Defer() {
         logger.info("WindowHookManager Defer Start");

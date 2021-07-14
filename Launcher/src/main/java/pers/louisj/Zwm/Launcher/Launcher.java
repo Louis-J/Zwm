@@ -37,11 +37,9 @@ public class Launcher {
         context.vdMan.filterLayout.Build();
 
         // init windowhook
-        context.hookMan.Init();
         context.pluginMan.Init();
 
         context.pluginMan.BeforeRun();
-        context.hookMan.Start();
 
         logger.info("Run message loop in Main");
         context.Start();
