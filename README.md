@@ -18,7 +18,7 @@
   + [ ] More Layouts...
 
 + [x] Plug-in support
-  + [ ] SystemTray Plug-in
+  + [x] State Save&Load Plug-in
   + [ ] Smart Gap
   + [x] i3-like Bar
   + [ ] More Plug-in...
@@ -30,7 +30,6 @@
 # TODO
 + solve bugs in current grid layout
 + solve bugs in current systemtray plug-in
-+ release the first version
 
 # Thanks to: 
 
