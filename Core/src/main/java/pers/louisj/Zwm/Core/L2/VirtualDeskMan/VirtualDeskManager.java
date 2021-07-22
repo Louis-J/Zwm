@@ -34,7 +34,7 @@ public class VirtualDeskManager {
     protected static Logger logger = LogManager.getLogger("VirtualDeskManager");
     protected Context context;
 
-    protected Map<Window, VirtualDesk> windowsToVirtualDesk = new HashMap<Window, VirtualDesk>();
+    public Map<Window, VirtualDesk> windowsToVirtualDesk = new HashMap<Window, VirtualDesk>();
 
     public List<VirtualDesk> virtualDesks = new ArrayList<>();
     protected int focusedIndex = 0;
@@ -44,7 +44,7 @@ public class VirtualDeskManager {
     };
 
     public LayoutFilter filterLayout = new LayoutFilter();
-    protected VirtualDeskRouterMan routerMan = new VirtualDeskRouterMan();
+    public VirtualDeskRouterMan routerMan = new VirtualDeskRouterMan();
 
     public ChannelList<PluginMessage> channelOutFocus = new ChannelList<>();
     public ChannelList<PluginMessage> channelOutRefresh = new ChannelList<>();
@@ -53,7 +53,7 @@ public class VirtualDeskManager {
     public ChannelList<PluginMessage> channelOutVDs = new ChannelList<>();
 
     // Action Packages
-    protected ActionInVDImpl ActionInVD = new ActionInVDImpl();
+    public ActionInVDImpl ActionInVD = new ActionInVDImpl();
 
     public ActionGlobalImpl ActionGlobal = new ActionGlobalImpl();
 
@@ -61,6 +61,10 @@ public class VirtualDeskManager {
 
     public VirtualDeskManager(Context context) {
         this.context = context;
+    }
+
+    public void Start() {
+        ActionGlobal.RefreshMonitors();
     }
 
     public void Exit() {
@@ -89,25 +93,7 @@ public class VirtualDeskManager {
             }
 
             case RefreshMonitors: {
-                var monitors = Monitor.GetMonitors();
-                while (monitors.size() > virtualDesks.size()) {
-                    ActionGlobal.VDAdd(defaultVDFunc.Invoke());
-                }
-                for (var vd : virtualDesks)
-                    if (!monitors.contains(vd.monitor))
-                        vd.ActionVD.Disable();
-                var it = virtualDesks.iterator();
-                for (var m : monitors) {
-                    if (m.vd == null) {
-                        VirtualDesk vd;
-                        for (vd = it.next(); vd.monitor != null; vd = it.next()) {
-                        }
-                        vd.ActionVD.Enable(m);
-                        m.vd = vd;
-                    }
-                }
-                channelOutMonitors
-                        .put(new PluginMessageMonitors(new ArrayList<VirtualDesk>(virtualDesks)));
+                ActionGlobal.RefreshMonitors();
                 break;
             }
 
@@ -414,6 +400,32 @@ public class VirtualDeskManager {
                     channelOutVDs.put(new PluginMessageVDs(targetVd, sourceVd));
             }
             logger.info("VDSwitchTo, END");
+        }
+
+        public void RefreshMonitors() {
+            Monitor.RefreshMonitors();
+            var monitors = Monitor.GetMonitors();
+            while (monitors.size() > virtualDesks.size()) {
+                ActionGlobal.VDAdd(defaultVDFunc.Invoke());
+            }
+            for (var vd : virtualDesks) {
+                if (!monitors.contains(vd.monitor))
+                    vd.ActionVD.Disable();
+                else
+                    vd.ActionVD.Enable(vd.monitor);
+            }
+            var it = virtualDesks.iterator();
+            for (var m : monitors) {
+                if (m.vd == null) {
+                    VirtualDesk vd;
+                    for (vd = it.next(); vd.monitor != null; vd = it.next()) {
+                    }
+                    vd.ActionVD.Enable(m);
+                    m.vd = vd;
+                }
+            }
+            channelOutMonitors
+                    .put(new PluginMessageMonitors(new ArrayList<VirtualDesk>(virtualDesks)));
         }
     }
 }

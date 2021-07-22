@@ -5,9 +5,6 @@ import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Global.WindowFilter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 public class VirtualDeskFilter extends WindowFilter {
 
     private static Logger logger = LogManager.getLogger("VirtualDeskFilter");

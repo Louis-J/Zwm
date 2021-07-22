@@ -407,12 +407,12 @@ public class Window {
         }
     }
 
-    public Window(HWND handle, int processId) {
-        logger.info("Window, handle = {}", Pointer.nativeValue(handle.getPointer()));
+    public Window(HWND handle) {
         this.hWnd = handle;
-        this.processId = processId;
+        processId = Window.QueryStatic.GetWindowPid(handle);;
 
-        logger.info("Window, processId = {}", processId);
+        logger.info("Window New, handle = {}, processId = {}",
+                Pointer.nativeValue(handle.getPointer()), processId);
         try {
             final int PROCESS_QUERY_INFORMATION = 0x0400;
             final int PROCESS_VM_READ = 0x0010;

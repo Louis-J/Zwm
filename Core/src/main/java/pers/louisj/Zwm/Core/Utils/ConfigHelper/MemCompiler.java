@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package pers.louisj.Zwm.Launcher;
+package pers.louisj.Zwm.Core.Utils.ConfigHelper;
 
 import static java.util.Collections.singleton;
 

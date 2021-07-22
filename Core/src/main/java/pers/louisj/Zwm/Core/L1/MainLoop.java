@@ -53,14 +53,17 @@ public class MainLoop extends Thread {
     public void run() {
         while (true) {
             Message msg = channelIn.take();
+            boolean ifContinue = false;
+            for (var h : hooks) {
+                if (h.Invoke(msg) == true)
+                    ifContinue = true;
+            }
+            if (ifContinue)
+                continue;
             if (msg == null) {
                 // Exit
                 virtualDeskManager.Exit();
                 return;
-            }
-            for (var h : hooks) {
-                if (h.Invoke(msg) == true)
-                    continue;
             }
             if (msg instanceof VDManMessage) {
                 var wmsg = (VDManMessage) msg;

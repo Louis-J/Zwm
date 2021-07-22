@@ -66,7 +66,7 @@ public class SysHookManager {
         this.context = context;
     }
 
-    public void Init() {
+    public void Start() {
         hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_HIDE,
                 new HMODULE(), windowHook, 0, 0, 0));
         hooks.add(WinHelper.MyUser32Inst.SetWinEventHook(EVENT_OBJECT_CLOAKED,
@@ -90,8 +90,6 @@ public class SysHookManager {
         }, null);
         WindowRegisterInit(hwnds);
     }
-
-    public void Start() {}
 
     public void Defer() {
         logger.info("WindowHookManager Defer Start");
@@ -214,9 +212,7 @@ public class SysHookManager {
         List<Window> registered = new ArrayList<>();
         for (var hwnd : hwnds) {
             if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
-                int id = Window.QueryStatic.GetWindowPid(hwnd);
-
-                var window = new Window(hwnd, id);
+                var window = new Window(hwnd);
                 if (context.filterVirtualDesk.CheckMatch(window)) {
                     logger.info("WindowRegister, Ignored, {}", window);
                     continue;
@@ -231,9 +227,7 @@ public class SysHookManager {
     private void WindowRegister(HWND hwnd) {
         if (windows.get(hwnd) == null && Window.QueryStatic.IsAppWindow(hwnd)) {
             logger.info("WindowRegister, hwnd = {}", Pointer.nativeValue(hwnd.getPointer()));
-            int id = Window.QueryStatic.GetWindowPid(hwnd);
-
-            var window = new Window(hwnd, id);
+            var window = new Window(hwnd);
             if (context.filterVirtualDesk.CheckMatch(window)) {
                 logger.info("WindowRegister, Ignored, {}", window);
                 return;

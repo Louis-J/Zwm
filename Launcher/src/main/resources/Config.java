@@ -1,4 +1,6 @@
 import pers.louisj.Zwm.Bar.Bar;
+import pers.louisj.Zwm.SaveLoad.SaveLoad;
+
 import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Derived.IConfig;
 import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.GridLayout;
@@ -25,6 +27,7 @@ public class Config implements IConfig {
         router4.Build();
         context.vdMan.ActionGlobal.VDCreate("聊天", router4, new GridLayout());
 
+        context.pluginMan.Add(new SaveLoad());
         context.pluginMan.Add(new Bar());
 
         return context;
