@@ -102,13 +102,17 @@ public class VirtualDesk {
 
     public class ActionVDImpl {
         public void WindowAdd(Window window) {
+            WindowAdd(window, true);
+        }
+
+        public void WindowAdd(Window window, boolean isLayout) {
             logger.info("WindowAdd, {}", window);
             allWindows.add(window);
 
             if (monitor == null)
                 window.Action.Hide();
 
-            if (layout != null && window.Query.CanLayout()) {
+            if (isLayout && layout != null && window.Query.CanLayout()) {
                 layout.WindowAdd(window);
             }
         }

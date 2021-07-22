@@ -34,7 +34,7 @@ public class VirtualDeskManager {
     protected static Logger logger = LogManager.getLogger("VirtualDeskManager");
     protected Context context;
 
-    protected Map<Window, VirtualDesk> windowsToVirtualDesk = new HashMap<Window, VirtualDesk>();
+    public Map<Window, VirtualDesk> windowsToVirtualDesk = new HashMap<Window, VirtualDesk>();
 
     public List<VirtualDesk> virtualDesks = new ArrayList<>();
     protected int focusedIndex = 0;
@@ -44,7 +44,7 @@ public class VirtualDeskManager {
     };
 
     public LayoutFilter filterLayout = new LayoutFilter();
-    protected VirtualDeskRouterMan routerMan = new VirtualDeskRouterMan();
+    public VirtualDeskRouterMan routerMan = new VirtualDeskRouterMan();
 
     public ChannelList<PluginMessage> channelOutFocus = new ChannelList<>();
     public ChannelList<PluginMessage> channelOutRefresh = new ChannelList<>();
@@ -53,7 +53,7 @@ public class VirtualDeskManager {
     public ChannelList<PluginMessage> channelOutVDs = new ChannelList<>();
 
     // Action Packages
-    protected ActionInVDImpl ActionInVD = new ActionInVDImpl();
+    public ActionInVDImpl ActionInVD = new ActionInVDImpl();
 
     public ActionGlobalImpl ActionGlobal = new ActionGlobalImpl();
 
