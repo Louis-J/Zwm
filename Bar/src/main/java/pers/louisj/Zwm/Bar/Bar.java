@@ -5,7 +5,7 @@ import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Derived.IPlugin;
 
 public class Bar implements IPlugin {
-    public class Config {
+    public static class Config {
         public int vdButtonMaxLen = 300;
         public int vdButtonFontSize = 22;
         public String vdButtonFontColorOn = "#f0B060";
