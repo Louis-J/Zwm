@@ -10,4 +10,5 @@
 rootProject.name = 'Zwm'
 include('Core')
 include('Bar')
+include('SaveLoad')
 include('Launcher')

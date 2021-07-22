@@ -1,4 +1,7 @@
 import pers.louisj.Zwm.Bar.Bar;
+import pers.louisj.Zwm.SaveLoad.SaveLoad;
+
+import com.sun.jna.Pointer;
 import pers.louisj.Zwm.Core.Context;
 import pers.louisj.Zwm.Core.Derived.IConfig;
 import pers.louisj.Zwm.Core.Global.Message.Message;
@@ -48,6 +51,7 @@ public class Config implements IConfig {
         router4.Build();
         context.vdMan.ActionGlobal.VDCreate("聊天", router4, new GridLayout());
 
+        context.pluginMan.Add(new SaveLoad());
         context.pluginMan.Add(new Bar());
 
         return context;
@@ -68,7 +72,7 @@ public class Config implements IConfig {
                             System.out
                                     .println("AllWindows: " + String.valueOf(vd.allWindows.size()));
                             for (var w : vd.allWindows) {
-                                System.out.println("handle: " + w.hWnd);
+                                System.out.println("handle: " + Pointer.nativeValue(w.hWnd.getPointer()));
                                 System.out.println("pid: " + w.processId);
                                 System.out.println("name: " + w.processName);
                                 System.out.println("class: " + w.windowClass);
