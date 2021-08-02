@@ -12,6 +12,7 @@ import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
 import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
 import pers.louisj.Zwm.Core.L2.Window.WindowStaticAction;
 import pers.louisj.Zwm.Core.Utils.ConfigHelper.ConfigExecHelper;
+import pers.louisj.Zwm.Core.Utils.ConfigHelper.ConfigPathHelper;
 
 public class Launcher {
     private static Logger logger;
@@ -34,6 +35,7 @@ public class Launcher {
         // e.printStackTrace();
         // }
         // init config
+        ConfigPathHelper.Init(Launcher.class.getClassLoader());
         ConfigExecHelper ch = new ConfigExecHelper();
         Context context = ch.GetContext();
         if (context == null)
