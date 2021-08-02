@@ -18,15 +18,19 @@ abstract class DictCharWind {
     public abstract void setValueWind2Char(Window window, Character character);
 
     public void putIntoMap(Character character) {
-        mapWind2Chars.put(getValueInChar(character), character);
+        Object key = getValueInChar(character);
+        if (mapWind2Chars.containsKey(key))
+            mapWind2Chars.get(key).add(character);
+        else
+            mapWind2Chars.put(key, Arrays.asList(character));
     }
 
-    public Character getAnalogue(Window window) {
+    public List<Character> getAnalogue(Window window) {
         return mapWind2Chars.get(getValueInWind(window));
     }
 
     public int weight;
-    public Map<Object, Character> mapWind2Chars = new HashMap<>();
+    public Map<Object, List<Character>> mapWind2Chars = new HashMap<>();
 }
 
 
@@ -153,14 +157,15 @@ public class Character {
         Map<Character, Integer> analogues = new HashMap<>();
 
         for (var d : dictionaries) {
-            var c = d.getAnalogue(window);
-            if (c != null) {
-                Integer val = analogues.get(c);
-                if (val == null)
-                    analogues.put(c, d.weight);
-                else
-                    analogues.put(c, val + d.weight);
-            }
+            var cs = d.getAnalogue(window);
+            if (cs != null)
+                for (var c : cs) {
+                    Integer val = analogues.get(c);
+                    if (val == null)
+                        analogues.put(c, d.weight);
+                    else
+                        analogues.put(c, val + d.weight);
+                }
         }
         Character cmax = null;
         int vmax = 0;
