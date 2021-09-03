@@ -47,6 +47,9 @@
         <File name="Plugin" fileName="logs\${sys:Time4File}\Plugin.log">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
         </File>
+        <File name="DelayedWindowFilter" fileName="logs\${sys:Time4File}\DelayedWindowFilter.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </File>
     </Appenders>
 
     <Loggers>
@@ -88,6 +91,9 @@
         </Logger>
         <Logger name="Plugin" level="trace" additivity="true">
             <AppenderRef ref="Plugin" />
+        </Logger>
+        <Logger name="DelayedWindowFilter" level="trace" additivity="true">
+            <AppenderRef ref="DelayedWindowFilter" />
         </Logger>
         
         <Root level="info">

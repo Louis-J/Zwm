@@ -46,7 +46,7 @@ public class MsgLoop extends QThread {
         this.bar = bar;
         this.context = context;
 
-        context.mainloop.hooks.add(new MessageHook() {
+        context.mainloop.hookAdd(new MessageHook() {
             Object obj = new Object();
 
             public boolean Invoke(Message msg) {

@@ -35,6 +35,9 @@ public class Config_Debug implements IConfig {
 
         context.filterVirtualDesk.MatchClass("RCLIENT"); // App: Lol
 
+        // filterDelayedWindow
+        context.filterDelayedWindow.DefaultConfig();
+        context.filterDelayedWindow.SetDelayTime(3000);
         // filterLayout
         context.vdMan.filterLayout.DefaultConfig();
         context.vdMan.filterLayout.MatchClass("screenClass"); // App: powerpoint fullscreen

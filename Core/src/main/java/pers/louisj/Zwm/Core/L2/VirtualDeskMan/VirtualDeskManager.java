@@ -228,6 +228,7 @@ public class VirtualDeskManager {
         public void WindowAddInit(List<Window> windows) {
             var focusedVD = Query.GetFocusedVD();
             for (var window : windows) {
+                window.Refresh.RefreshTitle();
                 var canLayout = !filterLayout.CheckMatch(window);
                 logger.info("WindowAddInit, {}, {}", canLayout, window);
                 window.Action.SetCanLayout(canLayout);
@@ -250,6 +251,7 @@ public class VirtualDeskManager {
         }
 
         public void WindowAdd(Window window) {
+            window.Refresh.RefreshTitle();
             var canLayout = !filterLayout.CheckMatch(window);
             logger.info("WindowAdd, {}, {}", canLayout, window);
             window.Action.SetCanLayout(canLayout);
@@ -264,7 +266,7 @@ public class VirtualDeskManager {
             target.lastFocused = window;
             windowsToVirtualDesk.put(window, target);
 
-            if (isForeground && target != focusedVD)
+            if (isForeground && target.monitor == null)
                 ActionGlobal.VDSwitchTo(virtualDesks.indexOf(target));
 
             channelOutRefresh.put(new PluginMessageRefresh(focusedVD));
