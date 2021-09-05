@@ -13,6 +13,8 @@ public class Config implements IConfig {
 
         context.keyBindMan.DefaultConfig();
         context.filterVirtualDesk.DefaultConfig();
+        context.filterDelayedWindow.DefaultConfig();
+        context.filterDelayedWindow.SetDelayTime(3000);
         context.vdMan.filterLayout.DefaultConfig();
         context.vdMan.filterLayout.MatchClass("screenClass"); // powerpoint fullscreen
 

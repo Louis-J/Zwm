@@ -436,7 +436,7 @@ public class Window {
             }
         }, 128);
 
-        Refresh.RefreshTitle();
+        // Refresh.RefreshTitle();
 
         Refresh.RefreshState();
 

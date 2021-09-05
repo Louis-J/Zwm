@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Timer;
+import java.util.TimerTask;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinDef.DWORD;
 import com.sun.jna.platform.win32.WinDef.HMODULE;
@@ -61,6 +62,7 @@ public class SysHookManager {
     private List<HHOOK> hookexs = new ArrayList<>();
 
     protected Context context;
+    private Timer timer = new Timer();
 
     public SysHookManager(Context context) {
         this.context = context;
@@ -93,6 +95,7 @@ public class SysHookManager {
 
     public void Defer() {
         logger.info("WindowHookManager Defer Start");
+        timer.cancel();
         for (var h : hooks)
             WinHelper.MyUser32Inst.UnhookWinEvent(h);
         for (var h : hookexs)
@@ -230,6 +233,16 @@ public class SysHookManager {
             var window = new Window(hwnd);
             if (context.filterVirtualDesk.CheckMatch(window)) {
                 logger.info("WindowRegister, Ignored, {}", window);
+                return;
+            }
+            if (context.filterDelayedWindow.CheckMatch(window)) {
+                logger.info("WindowRegister, Delayed, {}", window);
+                timer.schedule(new TimerTask() {
+                    public void run() {
+                        windows.put(hwnd, window);
+                        eventChans.put(new VDManMessage(VDManEvent.WindowAdd, window));
+                    }
+                }, context.filterDelayedWindow.delayTime);
                 return;
             }
             windows.put(hwnd, window);

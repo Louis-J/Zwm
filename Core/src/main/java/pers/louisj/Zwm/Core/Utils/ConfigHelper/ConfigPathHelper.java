@@ -13,7 +13,7 @@ public class ConfigPathHelper {
     static File configPath;
     static String configString;
 
-    static {
+    public static void Init(ClassLoader classLoader) {
         var path = System.getenv("USERPROFILE");
         if (path == null) {
             var hdrive = System.getenv("HOMEDRIVE");
@@ -45,8 +45,7 @@ public class ConfigPathHelper {
         if (!configFile.exists()) {
             // first run
             try {
-                InputStream fins =
-                        Object.class.getClassLoader().getResourceAsStream(DefaultConfigFile);
+                InputStream fins = classLoader.getResourceAsStream(DefaultConfigFile);
                 byte[] buffer = new byte[fins.available()];
                 fins.read(buffer);
                 fins.close();

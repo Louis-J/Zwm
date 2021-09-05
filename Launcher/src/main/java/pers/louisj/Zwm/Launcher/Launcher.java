@@ -8,10 +8,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import pers.louisj.Zwm.Core.Context;
-import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManEvent;
-import pers.louisj.Zwm.Core.Global.Message.VDManMessage.VDManMessage;
 import pers.louisj.Zwm.Core.L2.Window.WindowStaticAction;
 import pers.louisj.Zwm.Core.Utils.ConfigHelper.ConfigExecHelper;
+import pers.louisj.Zwm.Core.Utils.ConfigHelper.ConfigPathHelper;
 
 public class Launcher {
     private static Logger logger;
@@ -34,12 +33,14 @@ public class Launcher {
         // e.printStackTrace();
         // }
         // init config
+        ConfigPathHelper.Init(Launcher.class.getClassLoader());
         ConfigExecHelper ch = new ConfigExecHelper();
         Context context = ch.GetContext();
         if (context == null)
             throw new Error("context is null!");
 
         context.filterVirtualDesk.Build();
+        context.filterDelayedWindow.Build();
         context.vdMan.filterLayout.Build();
 
         // init windowhook

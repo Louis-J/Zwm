@@ -12,7 +12,7 @@ import pers.louisj.Zwm.Core.L2.VirtualDesk.Layouts.GridLayout;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskRouter;
 import pers.louisj.Zwm.Core.Utils.Async.Channel;
 
-public class Config implements IConfig {
+public class Config_Debug implements IConfig {
     static {
         String qtDir = System.getProperty("user.dir") + "\\..\\mymin-lib-6.1\\";
         String envPath = System.getProperty("java.library.path");
@@ -35,6 +35,9 @@ public class Config implements IConfig {
 
         context.filterVirtualDesk.MatchClass("RCLIENT"); // App: Lol
 
+        // filterDelayedWindow
+        context.filterDelayedWindow.DefaultConfig();
+        context.filterDelayedWindow.SetDelayTime(3000);
         // filterLayout
         context.vdMan.filterLayout.DefaultConfig();
         context.vdMan.filterLayout.MatchClass("screenClass"); // App: powerpoint fullscreen

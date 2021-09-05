@@ -10,6 +10,7 @@ import pers.louisj.Zwm.Core.L0.SysHook.SysHookManager;
 import pers.louisj.Zwm.Core.L1.MainLoop;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskFilter;
 import pers.louisj.Zwm.Core.L2.VirtualDeskMan.VirtualDeskManager;
+import pers.louisj.Zwm.Core.L2.Window.DelayedWindowFilter;
 import pers.louisj.Zwm.Core.PluginMan.PluginManager;
 import pers.louisj.Zwm.Core.Utils.Async.Channel;
 
@@ -19,6 +20,7 @@ public class Context {
     public PluginManager pluginMan = new PluginManager(this);
     public VirtualDeskManager vdMan = new VirtualDeskManager(this);
     public VirtualDeskFilter filterVirtualDesk = new VirtualDeskFilter();
+    public DelayedWindowFilter filterDelayedWindow = new DelayedWindowFilter();
 
     public MainLoop mainloop = new MainLoop(this, vdMan);
 
